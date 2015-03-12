@@ -1,0 +1,26 @@
+---
+title: "Kaggle Bike Sharing"
+output: html_document
+---
+Whats in the Kaggle bike sharing data? 
+```{r readData}
+library("lubridate")
+train.orig <- read.csv("data/kaggle/train.csv", stringsAsFactor=FALSE)
+train <- train.orig
+head(train)
+#train$datetime <- strptime(train$datetime, "%Y-%M-%d %H:%M:%S")
+train$datetime <- ymd_hms(train$datetime)
+train$time <- hour(train$datetime) + minute(train$datetime)/60  + 
+                 second(train$datetime)/3600
+train$season <- as.factor(c("spring", "summer", "fall", "winter")[train$season])
+wtr <- c("clear", "mist", "light precipitation", "heavy precipitation")
+train$weather <- as.factor( wtr[train$weather] )
+```
+Make some plots
+```{r eda1}
+library(lattice)
+boxplot(count ~ time, data=train)
+bwplot( time ~ count | season, data=train)
+bwplot( time ~ count | weather, data=train)
+bwplot(time ~ casual, data=train)
+bwplot(atemp ~ count, data=train)

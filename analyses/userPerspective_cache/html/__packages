@@ -1,0 +1,6 @@
+base
+lubridate
+lattice
+reshape2
+plyr
+ggplot2

@@ -1,0 +1,160 @@
+---
+title: "Hubway Bike Sharing"
+output: html_document
+---
+Whats in the Hubway bike sharing data?
+```{r loadData}
+hubway.orig <- read.csv("data/hubway/hubway_trips.csv", stringsAsFactor=FALSE)
+hubway <- hubway.orig
+hubway.st <- read.csv("data/hubway//hubway_stations.csv")
+```
+Lets use a datatime class for the dates,
+```{r datetimefix}
+library(lubridate)
+hubway$start_date <- mdy_hms(hubway$start_date)
+hubway$end_date <- mdy_hms(hubway$end_date)
+```
+
+There are over 1 million records in the hubway data-set. This will make our examples slow to run, so we take a sample of the available data to use,
+```{r sampledata}
+N <- 10000
+extractGivenDays <- function(data=hubway, start, end){
+  subset(hubway, start_date >= start & end_date <= end)
+}
+extractWeek <- function(data=hubway, start, weekdays=FALSE){
+  extractGivenDays(data, start=start, end=start + days(ifelse(weekdays, 5, 7)) )
+}
+```
+We find that the first 35000 rows give us about one month of data, which is a good number to start with. After we have trained some models, we can look back at the full data-set
+
+##Number of bikes at a station.
+Let us count the number of bikes going in minus the number going out of a station, as a function of time. For this we need to convert data time to datetime classes,
+Each record in the data is a full trip. We need to convert this to transactions. 
+```{r tripsToTransactions}
+#refactor this
+#there should be a faster way of converting the trips to transactions, but this was the
+#simplest implementation
+makeTransaction <- function(trip){
+  trans <- data.frame(
+    type=c("out", "in"),
+    bike=c(trip$bike_nr, trip$bike_nr),
+    time=c(trip$start_date, trip$end_data),
+    loc=c(trip$strt_statn, trip$end_statn)
+  )
+  trans$bike <- as.character(trans$bike)
+  trans
+}
+hubway.sample <- extractWeek(data=hubway, 
+                             start=ymd_hms("2012-06-04 0:0:0"), 
+                             weekdays=TRUE)
+                                  
+hubway_trans <- do.call(rbind, 
+                        lapply(1:nrow(hubway.sample), 
+                               function(i) makeTransaction(hubway[i,])))
+```
+We ran the code above, and it takes too long, and we terminated it. 
+
+A better thing would be to extract a time series for any station from the trips data.
+```{r stationTS}
+station_timeseries <- function(st, data=hubway.sample) {
+  st.bgn <- subset(data, strt_statn == st)
+  nb <- nrow(st.bgn)
+  if( nb > 0){
+    st.bgn$time <- st.bgn$start_date
+    st.bgn$dcount <- -1
+    st.bgn$dir <- "out"
+  }
+  st.end <- subset(data, end_statn == st)
+  ne <- nrow(st.end)
+  if(ne > 0){
+    st.end$time <- st.end$end_date
+    st.end$dcount <- 1
+    st.end$dir <- "in"
+  }
+  st.all <- rbind(st.bgn, st.end)
+  if(nrow(st.all) > 0 ){
+    st.all <- st.all[ order(st.all$time), ]
+  }
+  st.all$count <- cumsum(st.all$dcount)
+  st.all$count <- st.all$count + ifelse(st.all$count[1] == 1, -1, 1)
+  st.all$volume <- 1:nrow(st.all)
+  if(nrow(st.all) > 0) {
+    with(data=st.all, data.frame(station=st, time=time, count=count, volume=volume,dir=dir))
+  }
+  else {
+    data.frame(station=st, time=NA, count=NA, volume=NA, dir=NA)
+  }
+}
+```
+Lets look at some of these time-series. We need to know what station ids are in the data set.
+```{r timeseries}
+stns <- unique(c(hubway.sample$strt_statn, hubway.sample$end_statn))
+stns <- stns[!is.na(stns)]
+plot(count ~ time, data=station_timeseries(data=hubway.sample, 11),type="b")
+plot(volume ~ time, data=station_timeseries(data=hubway.sample, 11),type="b")
+timeseries.st <- do.call(rbind, lapply( stns, function(s){
+  station_timeseries(st=s, data=hubway.sample)
+}) )
+timeseries.st <- subset(timeseries.st, time < max(hubway.sample$start_date))
+```
+Make plots 
+```{r tsplots}
+library(ggplot2)
+ggplot(data=subset(timeseries.st, station %in% stns[1:10]),
+       aes(x=time, y=count, col=factor(station))) + 
+  geom_line()
+```
+###Symmetry between stations
+Some functions that define the symmetry of bike flow between pairs of stations,
+```{r stsym}
+#flow from station st1 to st2
+flowBwStns <- function(data=hubway.sample, st1, st2){
+  hbw <- subset(hubway.sample, 
+                (strt_statn == st1 & end_statn == st2) | (strt_statn == st2 & end_statn == st1) )
+  fl <- cumsum(2*(hbw$strt_statn == st1) - 1)
+  hbw$flow <- fl + ifelse(fl[1] == -1, 1, -1) #start the flow from 0
+  with(hbw, data.frame(from=st1, to=st2, start_time=start_date, end_time=end_date, flow=flow))
+}
+
+#net flow between stations at the end of a day
+balanceBwStns <- function(data=hubway.sample, st1, st2){
+  fb <- flowBwSts(data, st1, st2)
+  alldays <- unique(day(fb$end_time))
+  do.call("rbind", lapply(alldays, function(d){
+      fbd <- subset(fb, day(end_time) == d)
+      fbd <- fbd[ order(fbd$end_time), ]
+      with(fbd[ nrow(fbd), ], data.frame(from=st1, to=st2, day=d, flow=flow))
+    })
+  )
+}
+balanceDayEnd <- function( st, st2 = NULL, data=hubway.sample){
+  last <- function(dayData){
+    dayData <- dayData[ order(dayData$time),]
+    dayData$count[ nrow(dayData)]
+  }
+  getDay <- function(date) {
+    paste(year(date), month(date), day(date), sep="-")
+  }
+  if (is.null(st2)){
+    stdata <- station_timeseries(st)
+    alldays <- unique(getDay(stdata$time))
+    do.call("rbind", lapply(alldays, function(d){
+      dayData <- subset(stdata, getDay(time) == d)
+      data.frame(statn=st, day=ymd(d), balance=last( dayData))
+    }))
+  }
+  else{
+    stdata <- flowBwStns(data, st, st2)
+    stdata$time <- stdata$start_time
+    alldays <- unique(getDay(fb$end_time))
+    do.call("rbind", lapply(alldays, function(d){
+      dayData <- subset(stdata, getDay(time) == d)
+      data.frame(strt_statn=st, end_statn=st2, balance=last(dayData))
+    }))
+  }
+}
+  
+
+
+
+
