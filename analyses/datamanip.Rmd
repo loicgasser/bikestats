@@ -1,0 +1,73 @@
+---
+title: "Data Manipulation"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+knitr::opts_chunk$set(echo=FALSE)
+```
+
+##Introduction
+In the course of analyzing the bike-sharing data we will come across several problems with the structure of the data. For example we will have to transform/adapt the dates to R classes, or we might want a function to extract a subset of the data. These problems, along with the associated functions that we write will be documented here. 
+
+
+##Organization of the files
+The variable _datapath_ should point to the location of the data within the project directory, and the variable _analpath_ to the location of the analyzes. The data files are zip files under the sub-directories of _d)atapath_. 
+
+
+##Reading .csv files 
+The data is in _.csv_ which may or not may not be present in the folder. If the _.csv_ is not present, it could be in a _.zip_ file. We write a function to take the appropriate action.
+```{r loadcsvOrzip}
+read.csv.zip <- function(name.csv, path.csv, path.zip){
+  if(file.exists(path.csv)){
+    read.csv(path.csv, stringsAFactors=FALSE)
+  } else {
+    if(file.exists(path.zip)){
+      read.csv(unz(path.zip, name.csv))
+    }
+  }
+}
+```
+
+##Extract data by time periods
+```{r sampledata}
+library(lubridate)
+extractGivenDays <- function(data,
+														 start, 
+														 end,
+														 var.start_time="start_time",
+														 var.end_time="end_time"){
+	extidx <- (data[ , var.start_time] >= start) & ( data[, var.end_time] <= end)
+	data[extidx, ]
+}
+extractWeek <- function(data, start, 
+												var.start_time="start_time",
+												var.end_time="end_time",
+												weekdays=FALSE){
+	extractGivenDays(data, 
+	  						   start=start, 
+									 end=start + days(ifelse(weekdays, 5, 7)),
+									 var.start_time=var.start_time,
+									 var.end_time=var.end_time)
+}
+```
+
+
+### Transactions and trips
+The data provides records for each completed trip. We transform this data to transactions, here each transaction is either a bike rent or a bike return. Thus each trip will be converted into two transactions, one going _out_ (rent) and one _in_ (return).  
+
+```{r makeTransaction}
+makeTrxn <- function(trips){
+	n <- nrow(trips)
+  allvars <- names(trips)
+  tocopy <- setdiff(allvars, c("start_time", "end_time", 
+                               "start_statn", "end_statn"))
+  df <- rbind( trips[, tocopy], trips[, tocopy])
+	cbind(df, with(trips, data.frame(time=c(start_time, end_time),
+                    			         statn=c(start_statn, end_statn),
+                    			         drxn=c(rep("out", n), rep("in", n))
+                                  )
+                 )
+        )
+}
+```

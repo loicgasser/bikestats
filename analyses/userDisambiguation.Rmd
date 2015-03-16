@@ -1,0 +1,146 @@
+---
+title: "User Disambiguation"
+output: html_document
+---
+
+###Disambiguating User Ids
+
+We expect our case-studies to include a user-id. These are not available for the hubway data, however some user data is provided. We discuss various methods in which we can artificially create *user_ids* for the hubway data. A valid user cannot occupy two bikes at the same time.
+```{r validuser}
+validUser <- function(uid, data){
+	hs <- subset(data, user_id == uid & !is.na(start_time) & !is.na(end_time))
+  hs <- hs[order(hs$var.start_time),]
+  n <- nrow(hs)
+  s <- hs$start_time
+  e <- hs$end_time
+  ifelse(n==1, s <= e, all(s[2:n] > e[1:(n-1)]))
+}
+
+validUserIds <- function(data, uids=NULL){
+  if(is.null(uids)) uids <- unique(data$user_id)
+  all( sapply(uids, function(u) 
+    validUser(u, data)
+		)
+	)
+}
+```
+Two trips overlap if their time-lines do.
+```{r tripoverlap}
+ovlpngTrips <- function(trip1, trip2){
+  s1 <- trip1$start_time; e1 <- trip1$end_time 
+  s2 <- trip2$start_time; e2 <- trip2$end_time 
+  if ((s2 > e2) & (s1 > e1)) NA
+  else{
+    nonovlp <- (e2 <= s1) | (s2 >= e1)
+    !nonovlp
+  }
+}
+
+tripOverlaps <- function(trips, rentry.time = 0) {
+  #use a exponential relaxation to re-enter users into the system after a trip.
+  #parameter rentry.time is measured in minutes
+  n <- nrow(trips)
+  as.dist( do.call("rbind", 
+                   lapply(1:n, function(i){
+                    dt <- trips$end_time[1:i] - trips$start_time[i]
+                    dt <- as.double(dt, units="mins")
+                    dis <- c((dt > 0)*(1 - exp(-dt/rentry.time)),  rep(NA, n - i)) 
+                    dis[is.nan(dis)] <- 0
+                    dis
+                   }))
+        )
+}
+```
+
+Things are fine, we can use clustering to disambiguate the users. We do this by first defining *pre-user-id*- to be gender+birth-date,
+```{r disambg}
+disambguser <- function(user, trips,
+                        var.pre_user_id="pre_user_id",
+                        rentry.time=0){
+  trips <- trips[ trips[, var.pre_user_id] == user,]
+  tol <- tripOverlaps(trips, rentry.time)
+  trips$new_user_id <- paste(trips[, var.pre_user_id],
+                             if( sum(tol) > 0 ) cutree(hclust(tol,method="ward.D2"), h=0) 
+                              else   rep(1, nrow(trips)),
+                             sep="."
+                       )
+  trips
+}
+
+```
+Are we sure that *disambguser* works? The resulting *new_user_id*s should be valid. We will check if each newly generated user's trips overlap.
+```{r testdisambg}
+doUserTripsOverlap <- function(user, trips, test_ids){
+  trips.u <- trips[ test_ids == user,]
+  n <- nrow(trips.u)
+  if (n > 1) {
+    any(sapply(1:(n-1), function(i) {
+        #print(paste( "testing trip ", i))
+        any(sapply((i+1):n, function(j){
+        #  print(paste("\t against trip", j))
+          ovlpngTrips(trips.u[i,], trips.u[j,])
+        })) 
+      }
+    ))
+  }
+  else FALSE
+}
+
+```
+
+To generalize this, we will write a few tests here, just for documentation. To run the tests we will have to export the R-code to a source file (.R) and make a test-directory etc.
+
+##Using clustering to disambiguate users.
+Above we have a simple example of how to use clustering to disambiguate users. We can spell out the general problem of disambiguation as follows.
+
+A label indicating the id of a user is provided along with the usage data for each transaction (trips). However the _user id_s may not be unique, two or more users might have the same label. How do we disambiguate the users that carry the same label? 
+
+In our example user's label was their gender and birth-date, and we disambiguated users with the same label by exploiting the constraint that two overlapping trips cannot be made by  the same user. A hard problem in itself, related to graph-coloring, we managed to find one solution using a distance based clustering method. Distance between two trips was defined to be zero for non-overlapping trips, and infinite for overlapping ones. The resulting disambiguation was not perfect, since we found time traces of a resulting user's usage that seemed unrealistic. We found trips that followed each other immediately. After ending a trip we should expect a lag-time before the same user will start another trip. We can incorporate these concerns into the definition of distance between trips. Additional terms can  account for the intermittency between two non-overlapping trips, as well as their start and end stations. Now we attempt to develop these ideas as generally as possible. 
+
+# ```{r disamgen}
+#distBwnTrips <- function(trip1, trip2,
+#			 var.start_statn="strt_statn",
+#			 var.end_statn="end_statn",
+#			 var.start_time="start_time",
+#			 var.end_time="end_time",
+#			 wt.dur=0){
+#	if(ovlpngTrips(trip1, trip2){
+#		Inf
+#	} else {
+#		t12 <- abs(duration(trip1) - duration(trip2))
+#		d12.s <- distBwnStatns(trip1[, var.start_statn], trip2[, var.start_statn])
+#		d12.e <- distBwnStatns(trip1[, var.end_statn], trip2[, var.end_statn])
+#   }
+
+
+#```
+
+
+
+
+
+#### Tests
+```{r testthatdisambg}
+#library(testthat)
+#test_that("Disambiguates to a single user", {
+ # trips <- data.frame(pre_user_id = rep(1, 11), 
+  #                    start_date=seq(0, 10, length=11),
+   #                   end_date=seq(0, 10, length=11) + 0.5 )
+  #trips.da <- disambguser(user=1, trips=trips)
+#  expect_that(length(unique(trips.da$new_user_id)), equals(1))
+#})
+#test_that("Disambiguated users's trips do not overlap", {
+ # trips <- data.frame(pre_user_id = rep(1, 11), 
+  #                    start_date=seq(0, 10, length=11),
+  #                    end_date=seq(0, 10, length=11) + 1.5 )
+  #trips.da <- disambguser(user=1, trips=trips)
+  #users <- trips.da$new_user_id
+  #expect_that(any( sapply(users, 
+   #                       function(u) doUserTripsOverlaps(user=u, trips=trips.da))
+    #          ), 
+     #         equals(FALSE)
+      #       )
+#}
+```
+
+

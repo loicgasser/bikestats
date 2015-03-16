@@ -1,0 +1,9 @@
+base
+vimcom
+knitr
+rmarkdown
+lubridate
+lattice
+reshape2
+plyr
+ggplot2

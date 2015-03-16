@@ -1,0 +1,3 @@
+The directory Rcode contains code for functions that we needed to explorea
+bike sharing data. These functions were mostly written in Rmarkdown, and 
+extracted for use independently of the originating .Rmd file.
