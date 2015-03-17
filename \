@@ -1,8 +1,15 @@
-## ----setup, include=FALSE------------------------------------------------
-knitr::opts_chunk$set(cache=TRUE)
-knitr::opts_chunk$set(echo=FALSE)
+---
+title: "Variable naming scheme"
+author: "Vishal Sood"
+date: "13 Mar 2015"
+output: html_document
+---
 
-## ----setvarnames---------------------------------------------------------
+
+##Introduction
+After looking at bike-sharing data from across the world we realise the features that we will require for our analysis. A given data set might call these features by a different set of names. We need a function to convert the names to the naming convention that we will use to right our analyses code.
+
+```{r setvarnames}
 namingScheme <- function(nms.orig,
 			 var.user_id=NA,
 			 var.trip_id=NA,
@@ -27,8 +34,11 @@ namingScheme <- function(nms.orig,
 	nms.rplc[ nms.torplc] <- nms.touse
 	nms.rplc
 }
+```
+We can test this function on the hubway data. To make this function code, we should write some tests !!!
 
-## ----setvarnames.statn---------------------------------------------------
+We will also need a uniform naming scheme for station meta-data.
+```{r setvarnames.statn}
 namingScheme.statn <- function(nms.orig,
                       			 var.statn_id=NA,
                       			 var.lat=NA,
@@ -46,4 +56,12 @@ namingScheme.statn <- function(nms.orig,
 	nms.rplc[ nms.torplc] <- nms.touse
 	nms.rplc
 }
+```
+We can test this function on the hubway data. To make this function code, we should write some tests !!!
 
+	
+
+                  
+	
+
+                  

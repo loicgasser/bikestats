@@ -41,6 +41,31 @@ namingScheme <- function(nms.orig,
 ```
 We can test this function on the hubway data. To make this function code, we should write some tests !!!
 
+We will also need a uniform naming scheme for station meta-data.
+```{r setvarnames.statn}
+namingScheme.statn <- function(nms.orig,
+                      			 var.statn_id=NA,
+                      			 var.lat=NA,
+                      			 var.long=NA,
+                      			 var.status=NA){
+
+	nms.rplc <- nms.orig
+	names(nms.rplc) <- nms.orig
+
+  nms.touse <- c("statn", "long", "lat", "status" )
+			
+	nms.torplc <- c(var.statn_id, var.long, var.lat, var.status)
+	nms.touse <- nms.touse[ !is.na(nms.torplc)]
+	nms.torplc <- nms.torplc[ !is.na(nms.torplc)]
+	nms.rplc[ nms.torplc] <- nms.touse
+	nms.rplc
+}
+```
+We can test this function on the hubway data. To make this function code, we should write some tests !!!
+
+	
+
+                  
 	
 
                   

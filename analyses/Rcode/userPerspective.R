@@ -1,43 +1,40 @@
-## ----setup, include=FALSE------------------------------------------------
-knitr::opts_chunk$set(cache=TRUE)
-knitr::opts_chunk$set(echo=FALSE)
+## ----setup, include=TRUE-------------------------------------------------
+knitr::opts_chunk$set(cache=FALSE)
+knitr::opts_chunk$set(echo=TRUE)
+knitr::opts_chunk$set(fig.width=14)
+knitr::opts_chunk$set(fig.height=14)
 prjpath <- "~/work/citiviz/bikeSharing/bikestats/"
 datapath <- paste(prjpath, "data/", sep="")
 analpath <- paste(prjpath, "analyses/", sep="")
 rcodepath <- paste(analpath, "Rcode/", sep="")
-setwd(prjpath)
+setwd(analpath)
 
-## ----loadData------------------------------------------------------------
+## ----loadData, cache=TRUE------------------------------------------------
 source(paste(rcodepath,"datamanip.R", sep=""))
 path.zip <- paste(datapath, "hubway/hubway_2011_07_through_2013_11.zip", sep="")
+print(paste("we will try to read the file from", path.zip))
+print(paste("see if file exists", file.exists(path.zip))) 
 hubway.orig <- read.csv.zip(name.csv="hubway_trips.csv", 
-                            path.csv=paste(datapath, "hubway/hubway_trips.csv", sep=""),
+                            path.csv=paste(datapath, 
+					   "hubway/hubway_trips.csv", sep=""),
                             path.zip=path.zip )
 
 
 hubway <- hubway.orig
 hubway.st <- read.csv.zip(name.csv="hubway_stations.csv",
-                          path.csv=paste(datapath, "hubway/hubway_stations.csv", sep=""),
+                          path.csv=paste(datapath, 
+					 "hubway/hubway_stations.csv", sep=""),
                           path.zip=path.zip)
+print("data read with dimensions")
+print(dim(hubway))
 
 
-## ----hubwayClms----------------------------------------------------------
-names(hubway)
+## ----hubwayClms, echo=TRUE-----------------------------------------------
+print(names(hubway))
 
-## ----datetimefix---------------------------------------------------------
-library(lubridate)
-hubway$start_date <- mdy_hms(hubway$start_date)
-hubway$end_date <- mdy_hms(hubway$end_date)
-
-## ----sampleWeek----------------------------------------------------------
-data.sample <- extractWeek(data=hubway, 
-                             start=ymd_hms("2012-06-04 0:0:0"), 
-                             weekdays=TRUE)
-print(paste("Number of trips during the week starting on June 04 2012", 
-            nrow(data.sample)))
-
-## ----renamevars, echo=TRUE-----------------------------------------------
-nms.indata <- names(data.sample)
+## ----renamevars, echo=TRUE, cache=FALSE----------------------------------
+source(paste(rcodepath, "varNamingScheme.R", sep=""))
+nms.indata <- names(hubway)
 nms.touse <- namingScheme(nms.indata,
                           var.user_id = NA,
                           var.start_statn="strt_statn",
@@ -46,12 +43,43 @@ nms.touse <- namingScheme(nms.indata,
                           var.end_time="end_date",
                           var.bike_id="bike_nr",
                           var.trip_id=NA)
-names(data.sample) <- nms.touse[ names(data.sample)]
+print("we will rename data from")
+print(nms.indata)
+print("to")
+print(nms.touse)
+names( hubway ) <- nms.touse
 
+## ----renamevars.st, echo=TRUE, cache=FALSE-------------------------------
+nms.indata <- names(hubway.st)
+nms.touse <- namingScheme.statn(nms.indata,
+                                var.statn_id="id",
+                                var.lat="lat",
+                                var.long="lng",
+                                var.status="status")
+print("we will rename the station location meta data from")
+print(nms.indata)
+print("to")
+print(nms.touse)
+names(hubway.st) <- nms.touse
 
-### Adding features to the data
+## ----datetimefix, cache=FALSE--------------------------------------------
+library(lubridate)
+hubway$start_time <- mdy_hms(hubway$start_time)
+hubway$end_time <- mdy_hms(hubway$end_time)
+print("the names of hubway should have changed to ")
+print(names(hubway))
 
-Biker behavior in the morning can be different from that in the afternoon. We will divide each day into periods,
+## ----sampleWeek----------------------------------------------------------
+print("we will extract data from dims")
+print(dim(hubway))
+source(paste(rcodepath,"datamanip.R", sep=""))
+data.sample <- extractWeek(data=hubway, 
+                             start=ymd_hms("2012-06-04 0:0:0"),
+			     var.start_time="start_time",
+			     var.end_time="end_time",
+                             weekdays=TRUE)
+print(paste("Number of trips during the week starting on June 04 2012", 
+            nrow(data.sample)))
 
 ## ----dayperiods----------------------------------------------------------
 periodOfDay <- function(times){
@@ -80,7 +108,7 @@ data.sample <- do.call("rbind", lapply(unique(data.sample$pre_user_id),
 newUsers <- unique(data.sample$new_user_id)
 any( sapply(newUsers, function(u) {
 #      print(paste("testing user", u))
-      userTripsOverlaps(user=u, data.sample)
+      doUserTripsOverlap(user=u, data.sample, test_ids = "new_user_id")
     })
 )
 
@@ -97,9 +125,9 @@ histogram(tb$freq.trips, main="Histogram of number of trips made by a users")
 names(makeTrxn(data.sample[1,]))
 
 ## ----hwmaketrans---------------------------------------------------------
-trxns.sample <- makeTrxn(data.sample)
-trxns.sample$period <- periodOfDay( trxns.sample$time)
 trips.sample <- data.sample
+trxns.sample <- makeTrxn(trips.sample)
+trxns.sample$period <- periodOfDay( trxns.sample$time)
 
 ## ----transpeek-----------------------------------------------------------
 head(trxns.sample)
@@ -130,14 +158,14 @@ xyplot( inuse ~ time | user_id, data=eg.ustrs, type="l")
 library(reshape2)
 library(plyr)
 user.frequencies <- function(trxns){
-  trxn.types <- unique(trxns$trxn_type)
+  trxn.types <- unique(trxns$drxn )
   users <- unique(trxns$user_id)
-  tb <- as.data.frame(table(trxns$user_id, trxns$trxn_type))
+  tb <- as.data.frame(table(trxns$user_id, trxns$drxn))
   names(tb) <- c("user_id", "drxn", "freq")
   dcast(data=tb, formula=user_id ~ drxn, value.var="freq", fun.aggregate=sum)
 }
 
-ufreqs <- user.frequencies(trxns=hubway_trans)
+ufreqs <- user.frequencies(trxns=trxns.sample)
 
 ## ------------------------------------------------------------------------
 ufreqs.l <- melt(ufreqs, id.vars = "user_id", 
@@ -145,7 +173,9 @@ ufreqs.l <- melt(ufreqs, id.vars = "user_id",
 histogram(~ count | drxn, data=ufreqs.l)
 
 ## ----periodbars----------------------------------------------------------
-prdUsg <- with(data.trxns, as.data.frame(table(gender, period, trxn_type)))
+library(ggplot2)
+print(names(trxns.sample))
+prdUsg <- with(trxns.sample, as.data.frame(table(gender, period, drxn)))
 levels(prdUsg$period) <- c("morn.early", "morn", 
                           "aftn", "aftn.late", 
                           "evn", "evn.late", 
@@ -153,17 +183,17 @@ levels(prdUsg$period) <- c("morn.early", "morn",
 
 gp <- ggplot(data=prdUsg, aes(x=period, y=Freq, fill=gender)) +
         geom_bar(stat="identity", position="dodge") + 
-          facet_grid( trxn_type ~ . ) + 
+          facet_grid( drxn ~ . ) + 
             ggtitle("Usage going out by period of day across genders")
 print(gp)
 
-gp.out <- ggplot(data=subset(prdUsg, trxn_type=="out"),
+gp.out <- ggplot(data=subset(prdUsg, drxn =="out"),
                              aes(x=period, y=Freq, fill=gender)) +
             geom_bar(stat="identity", position="dodge") + 
               ggtitle("Usage going out by period of day across genders")
 print(gp.out)
 
-gp.in <- ggplot(data=subset(prdUsg, trxn_type=="in"),
+gp.in <- ggplot(data=subset(prdUsg, drxn =="in"),
                              aes(x=period, y=Freq, fill=gender)) +
             geom_bar(stat="identity", position="dodge") +
               ggtitle("Usage coming in by period of day across genders")
@@ -227,7 +257,7 @@ user.intmtc <-  function(trips,
   }
 }
   
-uintmtc <- user.intermittencies(trips=hubway_trips)  
+uintmtc <- user.intmtc(trips=trips.sample)  
 
 ## ----userdurs------------------------------------------------------------
 user.durations <- function(trips,
@@ -254,11 +284,11 @@ user.durations <- function(trips,
 }
 
 ## ----eguserdur-----------------------------------------------------------
-udurs <- user.durations(trips=hubway_trips)  
+udurs <- user.durations(trips=trips.sample)  
 
 ## ----userstartstatn------------------------------------------------------
 #remove this line
-trxns <- hubway_trans
+trxns <- trxns.sample
 entropy <- function(ps){
   ps <- ps/sum(ps)
   ps <- ps[ps > 0]
@@ -269,18 +299,18 @@ user.stnentropies <- function(trxns){
   data.frame(user_id=users, 
              strtent = sapply(users, function(u){
 																trxns.u <- subset(trxns, user_id == u)
-																ss <- subset(trxns.u, trxn_type == "out")$statn_id
+																ss <- subset(trxns.u, drxn == "out")$statn_id
 																entropy(table(ss))
 															}),
              endent = sapply(users, function(u){
 																trxns.u <- subset(trxns, user_id == u)
-																es <- subset(trxns.u, trxn_type == "in")$statn_id
+																es <- subset(trxns.u, drxn == "in")$statn_id
 																entropy(table(es))
 															}),
              strtend = sapply(users, function(u){
 																trxns.u <- subset(trxns, user_id == u)
-																ss <- subset(trxns.u, trxn_type == "out")$statn_id
-																es <- subset(trxns.u, trxn_type == "in")$statn_id
+																ss <- subset(trxns.u, drxn == "out")$statn_id
+																es <- subset(trxns.u, drxn == "in")$statn_id
 																ses <- paste(ss, es, sep=".")
 																entropy(table(ses))
 															})
@@ -301,8 +331,7 @@ user.ftr.dis <- dist(user.ftr.sc[,-1], method="euclidean")
 user.ftr.mat <- as.matrix(user.ftr.sc[,-1])
 hc <- hclust(user.ftr.dis , method="ward.D2")
 plot(hc)
-heatmap(user.ftr.mat)
-library(ggplot2)
+#heatmap(user.ftr.mat)
 user.ftr.sc <- user.ftr.sc[ order(cutree(hc, h=20)),]
 ufm.m <- melt(user.ftr.sc[, -2], id.vars = "user_id")
 p <- ggplot(ufm.m, aes(variable, user_id)) + 

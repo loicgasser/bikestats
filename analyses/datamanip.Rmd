@@ -5,6 +5,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(cache=TRUE)
 knitr::opts_chunk$set(echo=FALSE)
+library(lubridate)
 ```
 
 ##Introduction
@@ -28,6 +29,17 @@ read.csv.zip <- function(name.csv, path.csv, path.zip){
   }
 }
 ```
+
+##Converting time data to R date class
+
+We will need to convert the date/time strings to date classes,
+```{r convertDateTime}
+convertDateTime <- function(data, vars.time, convFunc=ymd_hms){
+	data.frame(data[, setdiff(names(data), vars.time)], 
+						 data.frame(lapply(data[, vars.time], convFunc)))
+}
+											
+
 
 ##Extract data by time periods
 ```{r sampledata}

@@ -67,13 +67,27 @@ print("we will rename data from")
 print(nms.indata)
 print("to")
 print(nms.touse)
+names( hubway ) <- nms.touse
+```
+
+We need to rename the variables in the station location meta-data
+```{r renamevars.st, echo=TRUE, cache=FALSE}
+nms.indata <- names(hubway.st)
+nms.touse <- namingScheme.statn(nms.indata,
+                                var.statn_id="id",
+                                var.lat="lat",
+                                var.long="lng",
+                                var.status="status")
+print("we will rename the station location meta data from")
+print(nms.indata)
+print("to")
+print(nms.touse)
+names(hubway.st) <- nms.touse
 ```
 
 We redefine the dates to be useful datetime classes,
 ```{r datetimefix, cache=FALSE}
 library(lubridate)
-newnames <- nms.touse[names(hubway)]
-names( hubway ) <- newnames
 hubway$start_time <- mdy_hms(hubway$start_time)
 hubway$end_time <- mdy_hms(hubway$end_time)
 print("the names of hubway should have changed to ")

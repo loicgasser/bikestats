@@ -1,8 +1,18 @@
 ---
 title: "User Disambiguation"
 output: html_document
+runtime: shiny
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+knitr::opts_chunk$set(echo=FALSE)
+knitr::opts_chunk$set(fig.width=14)
+knitr::opts_chunk$set(fig.height=12)
+
+library(shiny)
+library(lubridate)
+```
 ###Disambiguating User Ids
 
 We expect our case-studies to include a user-id. These are not available for the hubway data, however some user data is provided. We discuss various methods in which we can artificially create *user_ids* for the hubway data. A valid user cannot occupy two bikes at the same time.
@@ -97,23 +107,321 @@ A label indicating the id of a user is provided along with the usage data for ea
 
 In our example user's label was their gender and birth-date, and we disambiguated users with the same label by exploiting the constraint that two overlapping trips cannot be made by  the same user. A hard problem in itself, related to graph-coloring, we managed to find one solution using a distance based clustering method. Distance between two trips was defined to be zero for non-overlapping trips, and infinite for overlapping ones. The resulting disambiguation was not perfect, since we found time traces of a resulting user's usage that seemed unrealistic. We found trips that followed each other immediately. After ending a trip we should expect a lag-time before the same user will start another trip. We can incorporate these concerns into the definition of distance between trips. Additional terms can  account for the intermittency between two non-overlapping trips, as well as their start and end stations. Now we attempt to develop these ideas as generally as possible. 
 
-# ```{r disamgen}
-#distBwnTrips <- function(trip1, trip2,
-#			 var.start_statn="strt_statn",
-#			 var.end_statn="end_statn",
-#			 var.start_time="start_time",
-#			 var.end_time="end_time",
-#			 wt.dur=0){
-#	if(ovlpngTrips(trip1, trip2){
-#		Inf
-#	} else {
-#		t12 <- abs(duration(trip1) - duration(trip2))
-#		d12.s <- distBwnStatns(trip1[, var.start_statn], trip2[, var.start_statn])
-#		d12.e <- distBwnStatns(trip1[, var.end_statn], trip2[, var.end_statn])
-#   }
+### Recurrent behavior of a user: After a finishing a trip, a user will not immediately jump on another bike. 
+
+After a user has finished a trip, they will wait a typical time before they start another trip. We can formulate this behavior using a probability of a recurrent trip,
+```{r probRcrTrip}
+probRcrTrip <- function( trcr = 5, trlx = 10, units="minutes"){
+	function(t) {
+		ifelse(t <= 0,
+					 0,
+				 	 1/(1 + exp(-(dminutes(t) - dminutes(trcr))/dminutes(trlx)))
+		)
+	}
+}
+```
+We can show how the probability depends on the parameters, the recurrent time $t_{rcr}$ and relaxation times $t_{rlx}$.
+```{r egProbRcrTrip, cache=FALSE, echo=FALSE, fig.width=14, fig.height=40}
+library(shiny)
+inputPanel(
+					 sliderInput("trcr", label="time of recurrence:", 
+											 min=0, max=100, value=5, step=0.5),
+					 sliderInput("trlx", label="time of relaxation:", 
+											 min=0, max=100, value=5, step=0.5)
+)
+renderPlot({ 
+					 ts <- seq(0,100,length=100)
+					 plot(ts, sapply(ts, probRcrTrip(input$trcr, input$trlx)), 
+                 type="l", 
+                 main="How does the recurrent probability\n
+                 depend on relaxation and recurrent times?",
+								 xlab="$dt$",
+								 ylab="$P$",
+                 ylim=c(0,1))
+            abline(v=0.5)
+            abline(h=input$trcr)
+}, height=600, width=800)
+```
+The reader can adjust the parameters in the slider box to get a feeling of how the probability changes. 
+
+### Location overlap of trips: A user's trip end points cannot be random
+
+A user who uses bikes for their daily commuting will have a large probability to travel between the same end points. In order to capture the dependence between a user's subsequent trips we construct the probabilities of making two subsequent trips. A trip is defined by its start and end stations, ${\bf S}$, and the start and end times ${\bf T}$. Given that the user of two trips is the same, and assuming independence of times and station locations,
+$$
+P[ (S_2, T_2) | (S_1, T_1), u_2 = u_1] = P[S_2 | S_1, u_2 == u_1] * P[T_2 | T_1, u_2 = u_1].
+$$
+The second factor on the right is zero if the second trip starts before the first ends, or if it precedes the first trip. ( We are assuming that the second trip occurs after the first one.) The case where the second trip is indeed after the first one, the probability is provided by R code written in the previous section. The first factor can be computed in terms of a probability weight that depends on how many of the second trip's stations overlap with the first's. We do assume symmetry in trip direction, so that the overlap between a trip and its reverse is 2. The R code implementing this probability weight is as follows,
+```{r probSecTrip.Stn}
+prwtLoc2ndTrp <- function(s1, e1, s2, e2, weight=0){
+	if (s1 == e1){
+		exp(-weight * (2 - ((s2 == s1) + (e2 == s1))))
+	}
+	else {
+		exp(-weight * (2 - ((s2 == s1) + (e2 == e1) + (s2 == e1) + (e2 == s1))))
+	}
+}
+	
+```
+We now make a visualization which allows us to look at the probability weights when the weight parameter is changed. 
+
+```{r genSecondStatn}
+gen2ndStatns <- function(s1, e1){
+	st2 <- list()
+	st2$same <- c(s1, e1)
+	st2$reverse <- c(e1, s1)
+	st2$sameStart <- c(s1, s1 + e1 + 1)
+	st2$sameEnd <- c(s1 + e1 + 1, e1)
+	st2$different <- c(s1 + e1 + 1, s1 + e1 + 2)
+  st2
+}
+gen1stStatns <- function(){
+	st1 <- list()
+	st1$sameStrtEnd <- c(1,1)
+	st1$diffStrtEnd <- c(1,2)
+  st1
+}
+```
+```{r visProbSecTrip.Stn, cache=FALSE}
+inputPanel(
+					 sliderInput("weight", label="Weight parameter:",
+											 min=0, max=10, value=1, step=1)
+)
+renderPlot({
+						pwts.1 <- lapply(gen2ndStatns(1,2), function(s2){
+															 prwtLoc2ndTrp(1, 2, s2[1], s2[2], weight=input$weight)
+											 })
+						pwts.2 <- lapply(gen2ndStatns(1,1), function(s2){
+															 prwtLoc2ndTrp(1, 1, s2[1], s2[2], weight=input$weight)
+											 })
+						plot(x=as.factor(names(pwts.1)), y=as.numeric(pwts.1))
+						points(x=as.factor(names(pwts.2)), y=as.numeric(pwts.2), col="red")
+}, width=800, height=600)
+```
+
+Combining the time dependent and station location dependent terms, we can obtain a probability weight that the same user makes a given second trip,
+```{r prob2ndTrip }
+	timeToSecTrip <- function(trip1, trip2, units="minutes"){
+		duration(interval(start=trip1$end_time, end=trip2$start_time))/timeConvFuncs[[units]](1)
+	}
+	logWtSecTrip <- function(trip1, trip2, 
+													trcr=5, trlx=5,
+													weight=1, numStatns=10, 
+													timeUnits="minutes"){
+		wtime <- log(probRcrTrip(trcr, trlx)(timeToSecTrip(trip1, trip2, units=timeUnits)))
+		wloc <- log(prwtLoc2ndTrp(trip1$start_statn, trip1$end_statn,
+													trip2$start_statn, trip2$end_statn,
+													weight=weight))
+		wtime + wloc
+	}
+```
+The exact probabilities would require a look at the data. The function _logWtSecTrip_ assigns a weight to the second trip given the first. When we have $N$ trips, ordered by their start time, we can construct a table of probability weights $W_{i,j}$ that trip $j$ follows $i$. For this we will construct example trips to cover a basic set of cases.
+```{r egProbSecTripTable}
+t1 <- makeTripGivenCoords(start_time = ymd_hms("2012-01-1 08:00:00"),
+													end_time =  ymd_hms("2012-01-1 08:05:00"),
+													start_statn = 1,
+													end_statn = 2,
+													user_id=1)
+
+trips.eg1 <- list(t1, 
+								 shiftStartTime(t1, 2),
+                 shiftEndTime(t1, 2),
+								 shiftTripTimes(t1, 1),
+                 shiftTripTimes(t1, 10),
+                 relocEndStatn(t1, 3),
+								 relocStartStatn(t1, 3),
+								 relocTrip(t1, 3, 4),
+								 reverseStatns(t1)
+								)
+wtSecTripTable.1 <- do.call(rbind, 
+													lapply(trips.eg1, function(t1) {
+																	 sapply(trips.eg1, function(t2)logWtSecTrip(t1, t2))
+									}))
+trips.eg <- list(t1, 
+								 shiftStartTime(t1, 2),
+                 shiftEndTime(t1, 2),
+								 shiftTripTimes(t1, 1),
+                 shiftTripTimes(t1, 10),
+                 relocEndStatn(t1, 3),
+								 relocStartStatn(t1, 3),
+								 relocTrip(t1, 3, 4),
+								 reverseStatns(t1),
+                 relocEndStatn( shiftStartTime(t1, 3), 3),
+                 relocStartStatn( shiftTripTimes(t1, 10), 3),
+								 relocTrip( shiftTripTimes(t1, 3), 3, 4),
+								 reverseStatns( shiftTripTimes(t1, 10))
+								)
+
+N <- length(trips.eg)
+wtSecTripList <- 	lapply(1:N, 
+												 function(n){
+														sapply(1:N, 
+																	function(m){
+																		logWtSecTrip(trips.eg[[m]], trips.eg[[n]])
+																	})
+												})
+wtSecTripTable <- do.call(rbind, wtSecTripList)
+													 
+
+  
+hc <- hclust(as.dist(1 - exp( wtSecTripTable)), method="ward.D2")
+disSecTable <- -wtSecTripTable
+disSecTable[ is.infinite(disSecTable)] <- 100
+hc2 <- hclust(as.dist(disSecTable), method="ward.D2")
+```
+
+																		
 
 
-#```
+
+
+In order to keep the possibilities arising from the times at which the two trips were made, we will assume that trip 2 follows trip 1 in time. For a given set of trip stations, ${\bf S}_{12} \equiv \{ s_1, e_1, s_2, e_2 \}$ what we are looking for is the probability that the users of these two trips are the same,
+$$
+P[u_1 = u_2 ~ | ~ {\bf S}] = \frac{ P[{\bf S} ~ | ~ u_1 = u_2] P[u_1 = u_2] } { P[{\bf S}] }
+$$
+The factor $P[u_1 = u_2]$ is the probability that the users of two randomly selected trips are the same person, and the factor $P[{\bf S}]$ is the probability that two randomly chosen trips have their stations ${\bf S}$. These two functions together form a normalization factor that will depend on the data, and our definition for the probability $ P[{\bf S} ~ | ~ u_1 = u_2] $, that a given user makes two trips between a set of end of points. We can distinguish pairs of trips that do not share any station locations from those that share some. For example, what is the odds that a user will make two trips between the same start and end stations compared to two trips with non-overlapping stations? 
+
+$$
+	\begin{aligned}
+	P[s_2 = s_1,e_2 = e_1 ~ | ~ u_1=u_2 ] &=& \frac{\omega^2}{\Nu} \\
+	P[s_2 = s_1,e_2 \neq e_1 ~ | ~ u_1=u_2 ] &=& \frac(\omega}{\Nu} \\
+	P[s_2 \neq s_1,e_2 = e_1 ~ | ~ u_1=u_2 ] &=& \frac{\omega}{\Nu}\\
+	P[s_2 \neq s_1,e_2 \neq e_1 ~ | ~ u_1=u_2 ] &=& \frac{1}{\Nu| \\
+	P[s_2 = e_1,e_2 = s_1 ~ | ~ u_1=u_2 ] &=& \frac{\omega^2}{\Nu} \\
+	P[s_2 = e_1,e_2 \neq s_1 ~ | ~ u_1=u_2 ]  &=& \frac(\omega}{\Nu} \\
+	P[s_2 \neq e_1,e_2 = s_1 ~ | ~ u_1=u_2 ] &=& \frac{\omega}{\Nu}\\
+	P[s_2 \neq e_1,e_2 \neq s_1 ~ | ~ u_1=u_2 ]  &=& \frac{1}{\Nu} 
+	\end{aligned}
+$$
+where $\Nu$ is the normalization factor.
+We can now render this probability into R code. We attack the problem by first defining the probability weight of the locations of the second trip,
+We can visualize the behavior the probability weights of the second trip when weight changes. Before we do that we need some functions that generate second stations from the first.
+						
+
+
+
+
+```{r probSameUserOfLocs}
+probSameUserGvnStatns <- function(s1, e1, s2, e2, omega=1){
+	if((s1 == e1) | (s2 == e2)) stop("Trip starts and ends at the same point")
+	omega^( (s2 == s1) + (e2 == e1) + (s2 == e1) + (e2 == s1) )/(2*(1 + omega)^2)
+}
+```
+
+
+
+```{r timeSprnTrips}
+timeSprnTrips <- function(trip1, trip2, units="minutes"){
+  convFuncs <- c(eseconds, eminutes, ehours, edays)
+  names(convFuncs) <- c("seconds", "minutes", "hours", "days")
+  if(trip1$start_time < trip2$start_time){
+    duration(interval(start=trip1$end_time, end=trip2$start_time))/convFuncs[[units]](1)
+  } else{
+    duration(interval(start=trip2$end_time, end=trip1$start_time))/convFuncs[[units]](1)
+  }
+}
+
+probSepTrips <- function(trip1, trip2, tsep=5, hsep=5, units="minutes"){
+  if(ovlpngTrips(trip1, trip2)) {0}
+  else{
+    tsep12 <- timeSprnTrips(trip1, trip2, units=units)
+    1 - 1/(1 + exp((tsep12 - tsep)/hsep))
+  }
+}
+```
+
+We need to define the distance between two stations. For simplicity we will use a Euclidean distance given by the latitude and longitudes of the two stations, which is clearly wrong, but can be made correct using a function from a geospatial library.
+
+```{r distBwnStatns}
+distBwnStatns <- function(stn1, stn2, statnLoc){
+  l12 <- statnLoc[ statnLoc$statn %in% c(stn1, stn2), c("long", "lat")]
+  as.numeric(dist(l12))
+}
+  
+```
+
+```{r durationTrip}
+timeConvFuncs <- c(dseconds, dminutes, dhours, ddays)
+names(timeConvFuncs) <- c("seconds", "minutes", "hours", "days")
+drntrip <- function(trip, units="minutes"){
+  duration(interval(start=trip$start_time, end=trip$end_time))/timeConvFuncs[[units]](1)
+}
+```
+To debug and test our code we will need to produce trips. Here is a function that creates trips with given start and end times.
+```{r tripmaker}
+makeTripGivenCoords <- function(start_time, 
+																start_statn,  
+																end_time, 
+																end_statn,
+																user_id){
+  data.frame(start_time=start_time, 
+						 start_statn=start_statn, 
+						 end_time=end_time, 
+						 end_statn=end_statn, 
+						 user_id=user_id)
+}
+shiftEndTime <- function(trip1, dt, units="minutes"){
+  trip1n <- trip1
+  trip1n$end_time <- trip1n$end_time + timeConvFuncs[[units]](dt)
+  trip1n
+}
+shiftStartTime <- function(trip, dt, units="minutes"){
+  tripn <- trip
+  tripn$start_time <- tripn$start_time + timeConvFuncs[[units]](dt)
+  tripn
+}
+shiftTripTimes <- function(trip, dt, units="minutes"){
+  moveStartTime( moveEndTime( trip, dt, units), dt, units)
+}
+
+relocEndStatn <- function(trip, statn){
+	trip2 <- trip
+	trip2$end_statn = statn
+	trip2
+}
+relocStartStatn <- function(trip, statn){
+	trip2 <- trip
+	trip2$start_statn = statn
+	trip2
+}
+relocTrip <- function(trip, start, end){
+	trip2 <- trip
+	trip2$start_statn <- start
+	trip2$end_statn <- end
+	trip2
+}
+reverseStatns <- function(trip) {
+	trip2 <- trip
+	trip2$start_statn <- trip$end_statn
+	trip2$end_statn <- trip$start_statn
+	trip2
+}
+
+
+```
+
+
+```{r disamgen}
+distBwnTrips <- function(trip1, trip2, statnLoc,
+			                    wt.dur=1,
+                          wt.dis=1,
+                          tsep=5,
+                          hsep=2){
+	if(ovlpngTrips(trip1, trip2)){
+		Inf
+	} else {
+    
+    psep12 <- 1/(1 + exp(hsep * (timeSprnTrips(trip1, trip2) - tsep) ) )
+		tdrn12 <- abs(drntrip(trip1) - drntrip(trip2))
+		d12.s <- distBwnStatns(trip1$start_statn, trip2$start_statn, statnLoc = statnLoc)
+		d12.e <- distBwnStatns(trip1$end_statn, trip2$end_statn, statnLoc=statnLoc)
+    ds <- c(tdrn12, d12.s, d12.e)
+    wts <- c(wt.dur, wt.dis, wt.dis)
+    psep12 * sqrt(sum(wts*(ds^2))/sum(wts)) 
+   }
+}
+
+
+```
 
 
 
