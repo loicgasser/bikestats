@@ -5,10 +5,6 @@ date: "13 Mar 2015"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(cache=TRUE)
-knitr::opts_chunk$set(echo=FALSE)
-```
 
 ##Introduction
 After looking at bike-sharing data from across the world we realise the features that we will require for our analysis. A given data set might call these features by a different set of names. We need a function to convert the names to the naming convention that we will use to right our analyses code.

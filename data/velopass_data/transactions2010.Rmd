@@ -1,0 +1,44 @@
+---
+title: "Bike sharing from Velopass"
+output: html_document
+---
+#Introduction
+We analyze the data from Velopass
+#Data
+The data in the csvs is in six files, that we load 
+```{r data6files}
+trans.2010.1 <- read.csv("transactions_page1_2010.csv", sep=";", stringsAsFactors=FALSE)
+trans.2010.2 <- read.csv("transactions_page2_2010.csv", sep=";", stringsAsFactors=FALSE)
+trans.2010.3 <- read.csv("transactions_page3_2010.csv", sep=";", stringsAsFactors=FALSE)
+trans.2010.4 <- read.csv("transactions_page4_2010.csv", sep=";", stringsAsFactors=FALSE)
+trans.2010.5 <- read.csv("transactions_page5_2010.csv", sep=";", stringsAsFactors=FALSE)
+trans.2010.6 <- read.csv("transactions_page6_2010.csv", sep=";", stringsAsFactors=FALSE)
+```
+Do all these 6 files have the same dimensions?
+```{r data6dim}
+dim(trans.2010.1)
+dim(trans.2010.2)
+dim(trans.2010.3)
+dim(trans.2010.4)
+dim(trans.2010.5)
+dim(trans.2010.6)
+```
+Page 2 and 4 have 6 columns! Whats the difference? These two files have an extra column *X*, that contains,
+```{r diff6pages}
+unique(trans.2010.2$X)
+```
+I will have to ask what these values mean. For now I will ignore the variable *X* and proceed to collate the other columns into one data frame,
+```{r collateTransactions}
+trans.2010.pages <- list(trans.2010.1, trans.2010.2[, 1:5], trans.2010.3, 
+                         trans.2010.4[, 1:5], trans.2010.5, trans.2010.6)
+trans.2010 <- do.call("rbind", trans.2010.pages)
+```
+
+
+
+#Reciprocity
+How many from a station, and how many to?
+```{r tofromstation}
+tofromMat <- table(trans.2010$from_station, trans.2010$to_station)
+toDF <- rowSums(tofromMat)
+fromDF <- colSums(tofromMat)

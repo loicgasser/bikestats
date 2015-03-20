@@ -1,0 +1,10 @@
+---
+title: "A template for statistical reports of the bike sharing system data"
+output:
+  pdf_document: default
+  html_document:
+    highlight: tango
+    number_sections: yes
+    theme: journal
+---
+

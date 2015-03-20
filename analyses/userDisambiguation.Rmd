@@ -9,11 +9,100 @@ knitr::opts_chunk$set(cache=TRUE)
 knitr::opts_chunk$set(echo=FALSE)
 knitr::opts_chunk$set(fig.width=14)
 knitr::opts_chunk$set(fig.height=12)
+prjpath <- "~/work/citiviz/bikeSharing/bikestats/"
+datapath <- paste(prjpath, "data/", sep="")
+analpath <- paste(prjpath, "analyses/", sep="")
+rcodepath <- paste(analpath, "Rcode/", sep="")
 
 library(shiny)
 library(lubridate)
 ```
-###Disambiguating User Ids
+#Operations on trips
+To understand the statistics of our data, and to write simulations for the bike sharing system, we will need a bunch of functions that can create a trip. We can also use these functions to debug and test our code for statistical analysis.. 
+```{r tripmaker}
+makeTripGivenCoords <- function(start_time, 
+																start_statn,  
+																end_time, 
+																end_statn,
+																user_id){
+  data.frame(start_time=start_time, 
+						 start_statn=start_statn, 
+						 end_time=end_time, 
+						 end_statn=end_statn, 
+						 user_id=user_id)
+}
+shiftEndTime <- function(trip1, dt, units="minutes"){
+  trip1n <- trip1
+  trip1n$end_time <- trip1n$end_time + timeConvFuncs[[units]](dt)
+  trip1n
+}
+shiftStartTime <- function(trip, dt, units="minutes"){
+  tripn <- trip
+  tripn$start_time <- tripn$start_time + timeConvFuncs[[units]](dt)
+  tripn
+}
+shiftTripTimes <- function(trip, dt, units="minutes"){
+  shiftStartTime( shiftEndTime( trip, dt, units), dt, units)
+}
+
+relocEndStatn <- function(trip, statn){
+	trip2 <- trip
+	trip2$end_statn = statn
+	trip2
+}
+relocStartStatn <- function(trip, statn){
+	trip2 <- trip
+	trip2$start_statn = statn
+	trip2
+}
+relocTrip <- function(trip, start, end){
+	trip2 <- trip
+	trip2$start_statn <- start
+	trip2$end_statn <- end
+	trip2
+}
+reverseStatns <- function(trip) {
+	trip2 <- trip
+	trip2$start_statn <- trip$end_statn
+	trip2$end_statn <- trip$start_statn
+	trip2
+}
+
+
+```
+
+
+```{r disamgen}
+distBwnTrips <- function(trip1, trip2, statnLoc,
+			                    wt.dur=1,
+                          wt.dis=1,
+                          tsep=5,
+                          hsep=2){
+	if(ovlpngTrips(trip1, trip2)){
+		Inf
+	} else {
+    
+    psep12 <- 1/(1 + exp(hsep * (timeSprnTrips(trip1, trip2) - tsep) ) )
+		tdrn12 <- abs(drntrip(trip1) - drntrip(trip2))
+		d12.s <- distBwnStatns(trip1$start_statn, trip2$start_statn, statnLoc = statnLoc)
+		d12.e <- distBwnStatns(trip1$end_statn, trip2$end_statn, statnLoc=statnLoc)
+    ds <- c(tdrn12, d12.s, d12.e)
+    wts <- c(wt.dur, wt.dis, wt.dis)
+    psep12 * sqrt(sum(wts*(ds^2))/sum(wts)) 
+   }
+}
+
+
+```
+#Sample data to use for developing our analysis
+
+```{r sampledata}
+trips.sample <- read.csv(paste(datapath, "extracted/hubwayTripsSample.csv", sep=""),
+															 stringsAsFactors=FALSE)
+```
+
+
+#Disambiguating User Ids
 
 We expect our case-studies to include a user-id. These are not available for the hubway data, however some user data is provided. We discuss various methods in which we can artificially create *user_ids* for the hubway data. A valid user cannot occupy two bikes at the same time.
 ```{r validuser}
@@ -153,11 +242,16 @@ $$
 The second factor on the right is zero if the second trip starts before the first ends, or if it precedes the first trip. ( We are assuming that the second trip occurs after the first one.) The case where the second trip is indeed after the first one, the probability is provided by R code written in the previous section. The first factor can be computed in terms of a probability weight that depends on how many of the second trip's stations overlap with the first's. We do assume symmetry in trip direction, so that the overlap between a trip and its reverse is 2. The R code implementing this probability weight is as follows,
 ```{r probSecTrip.Stn}
 prwtLoc2ndTrp <- function(s1, e1, s2, e2, weight=0){
-	if (s1 == e1){
-		exp(-weight * (2 - ((s2 == s1) + (e2 == s1))))
-	}
-	else {
-		exp(-weight * (2 - ((s2 == s1) + (e2 == e1) + (s2 == e1) + (e2 == s1))))
+	if(is.na(s1) | is.na(e1) | is.na(s2) | is.na(e2)){
+		print("			stations unavailable")
+		0
+	} else {
+		if (s1 == e1){
+			exp(-weight * (2 - ((s2 == s1) + (e2 == s1))))
+		}
+		else {
+			exp(-weight * (2 - ((s2 == s1) + (e2 == e1) + (s2 == e1) + (e2 == s1))))
+		}
 	}
 }
 	
@@ -200,6 +294,8 @@ renderPlot({
 
 Combining the time dependent and station location dependent terms, we can obtain a probability weight that the same user makes a given second trip,
 ```{r prob2ndTrip }
+	timeConvFuncs <- c(dseconds, dminutes, dhours, ddays)
+	names(timeConvFuncs) <- c("seconds", "minutes", "hours", "days")
 	timeToSecTrip <- function(trip1, trip2, units="minutes"){
 		duration(interval(start=trip1$end_time, end=trip2$start_time))/timeConvFuncs[[units]](1)
 	}
@@ -222,52 +318,160 @@ t1 <- makeTripGivenCoords(start_time = ymd_hms("2012-01-1 08:00:00"),
 													end_statn = 2,
 													user_id=1)
 
-trips.eg1 <- list(t1, 
-								 shiftStartTime(t1, 2),
-                 shiftEndTime(t1, 2),
-								 shiftTripTimes(t1, 1),
-                 shiftTripTimes(t1, 10),
-                 relocEndStatn(t1, 3),
-								 relocStartStatn(t1, 3),
-								 relocTrip(t1, 3, 4),
-								 reverseStatns(t1)
-								)
-wtSecTripTable.1 <- do.call(rbind, 
-													lapply(trips.eg1, function(t1) {
-																	 sapply(trips.eg1, function(t2)logWtSecTrip(t1, t2))
-									}))
-trips.eg <- list(t1, 
-								 shiftStartTime(t1, 2),
-                 shiftEndTime(t1, 2),
-								 shiftTripTimes(t1, 1),
-                 shiftTripTimes(t1, 10),
-                 relocEndStatn(t1, 3),
-								 relocStartStatn(t1, 3),
-								 relocTrip(t1, 3, 4),
-								 reverseStatns(t1),
-                 relocEndStatn( shiftStartTime(t1, 3), 3),
-                 relocStartStatn( shiftTripTimes(t1, 10), 3),
-								 relocTrip( shiftTripTimes(t1, 3), 3, 4),
-								 reverseStatns( shiftTripTimes(t1, 10))
-								)
 
-N <- length(trips.eg)
-wtSecTripList <- 	lapply(1:N, 
-												 function(n){
-														sapply(1:N, 
-																	function(m){
-																		logWtSecTrip(trips.eg[[m]], trips.eg[[n]])
-																	})
-												})
-wtSecTripTable <- do.call(rbind, wtSecTripList)
-													 
+wtsSecTrip <- function(trips, 
+											 trcr=5, trlx=5,
+											 weight=1){
+  N <- length(trips)
+  do.call(rbind, lapply(1:N,
+                        function(n){
+                          sapply(1:N,
+                                 function(m){
+                                   logWtSecTrip(trips[[m]], trips[[n]],
+																								trcr=trcr, trlx=trlx,
+																								weight=1)
+                                 })
+                        }))
+}
+
+makeSecTripClusterAndPlot <- function(wts, withPlot=FALSE){
+	dis <- -wts
+	dis[ is.infinite(dis)] <- 100
+	if(nrow(dis) < 2){
+		print("only one trip!")
+		NA
+	} else {
+		hc <- hclust(as.dist(dis), method="complete")
+		if(withPlot) plot(hc)
+		hc
+	}
+}
+
+numUserTrips <- as.data.frame(table(trips.sample$user_id), stringsAsFactors=FALSE)
+names(numUserTrips) <- c("user_id", "numTrips")
+numUserTrips <- numUserTrips[ order(numUserTrips$numTrips, decreasing=TRUE),]
+rownames(numUserTrips) <- numUserTrips$user_id
+
+
+```
+Now we can test a few examples of trip sets
+```{r testProbSecTripTable}
+trips.eg <- list(t1, 
+								 shiftTripTimes(t1, 1),
+								 shiftTripTimes(t1, 2),
+								 shiftTripTimes(t1, 3),
+								 shiftTripTimes(t1, 4),
+								 shiftTripTimes(t1, 5),
+                 shiftTripTimes(t1, 6),
+                 shiftTripTimes(t1, 7),
+                 shiftTripTimes(t1, 8),
+                 shiftTripTimes(t1, 9),
+                 shiftTripTimes(t1, 10),
+                 shiftTripTimes(t1, 11)
+								)
+wts <- wtsSecTrip(trips.eg)
+hc <- makeSecTripClusterAndPlot(wts)
+plot(hc)
+```
+A second example
+```{r testProbSecTripTable2}
+trips.eg <- list(t1, 
+									shiftTripTimes(t1, 5.1),
+									shiftTripTimes(t1, 6),
+									shiftTripTimes(t1, 6.1),
+									shiftTripTimes(t1, 10),
+									shiftTripTimes(t1, 10.2)
+									)
+wts <- wtsSecTrip(trips.eg)
+hc <- makeSecTripClusterAndPlot(wts)
+```
+
+A second example
+```{r testProbSecTripTable3}
+trips.eg <- list(t1, 
+									shiftTripTimes(t1, 5.1),
+									shiftTripTimes(t1, 11.0),
+									shiftTripTimes(t1, 17.0),
+									shiftTripTimes(t1, 24.0),
+									shiftTripTimes(t1, 32.0)
+									)
+wtSecTripTable <- wtsSecTrip(trips.eg)
+hc <- makeSecTripClusterAndPlot(wtSecTripTable)
+```
+From the hubway data, some users to disambiguate
+```{r testProbSecTripTabelHubway}
+trips.sample <- trips.sample[ order(trips.sample$start_time),]
+
+users <- unique(trips.sample$user_id) 
+
+clusterTrips <- function(data, withPlot=FALSE){
+	trips.list <- lapply(1:nrow(data), function(n) data[n,])
+	wts <- wtsSecTrip(trips.list)
+	makeSecTripClusterAndPlot(wts, withPlot=FALSE)
+}
+
+clusterTripsOfPreUser <- function(data, user_id, withPlot=FALSE){
+	data.user <- subset(data, user_id == user_id)
+  print(paste("for pre user", user_id, "trips to disambiguate", nrow(data.user)))
+	clusterTrips(data.user)
+}
+
+
+disambiguateWithClustering <- function(user, trips, 
+																			var.pre_user_id="pre_user_id", 
+                                      h=2){
+	vars.statns <- c("start_statn", "end_statn")
+	if(sum(is.na(trips[, vars.statns]))) {
+		print("--------trip stations unavailable for user")
+		list(clustering=NA, rep(user, nrow(trips)))
+	} else {
+		hc <- clusterTrips(trips, withPlot=FALSE)
+		if(is.na(hc)) {
+			k <- 1
+		} else {
+			k <- cutree(hc, h=h)
+		}
+		list(clustering=hc, new_user_ids=paste(rep(user, nrow(trips)), k, sep="."))
+	}
+}
+```
+
+Some hubway examples
+```{r someHubwayExamples}
+#hc1 <- clusterTripsOfPreUser(trips.sample, numUserTrips$user_id[1])
+# hc2 <- clusterTripsOfPreUser(trips.sample, numUserTrips$user_id[2])
+# hc.Female1960.1 <- clusterTripsOfPreUser(trips.sample, "Female1960.1")
+# hc.Male1990.1 <- clusterTripsOfPreUser(trips.sample, "Male1990.1")
+hc.allUsers <- lapply(numUserTrips$user_id,
+											function(u){
+												print(paste("disambiguating user", u,
+																		"who made", numUserTrips[u, "numTrips"], "trips"))
+												hc <- disambiguateWithClustering(u, subset(trips.sample, user_id == u))
+												print(paste("disambiguated ", length(unique(hc$new_user_id)), "users"))
+											}
+											)
+
+```
+The computation of disambiguation method over all the data takes a long time, so we have pre-computed some and saved it to the disk. We can use this to get new user_ids.
+```{r loadDisambig}
+load(paste(datapath, "Rdata/hcAllUsers.Rdata", sep=""))
+trips.sample.da <- do.call(rbind, 
+													 lapply(hc.allUsers,
+																	function(hc) {
+																		trips.user <- subset(trips.sample, user_id == hc$user_id)
+																		trips.user$user_id <- hc$new_user_ids
+																		trips.user
+																	}
+																	)
+													 )
+```
+																				 
+
+
+
 
   
-hc <- hclust(as.dist(1 - exp( wtSecTripTable)), method="ward.D2")
-disSecTable <- -wtSecTripTable
-disSecTable[ is.infinite(disSecTable)] <- 100
-hc2 <- hclust(as.dist(disSecTable), method="ward.D2")
-```
+
 
 																		
 
@@ -340,90 +544,10 @@ distBwnStatns <- function(stn1, stn2, statnLoc){
 ```
 
 ```{r durationTrip}
-timeConvFuncs <- c(dseconds, dminutes, dhours, ddays)
-names(timeConvFuncs) <- c("seconds", "minutes", "hours", "days")
 drntrip <- function(trip, units="minutes"){
   duration(interval(start=trip$start_time, end=trip$end_time))/timeConvFuncs[[units]](1)
 }
 ```
-To debug and test our code we will need to produce trips. Here is a function that creates trips with given start and end times.
-```{r tripmaker}
-makeTripGivenCoords <- function(start_time, 
-																start_statn,  
-																end_time, 
-																end_statn,
-																user_id){
-  data.frame(start_time=start_time, 
-						 start_statn=start_statn, 
-						 end_time=end_time, 
-						 end_statn=end_statn, 
-						 user_id=user_id)
-}
-shiftEndTime <- function(trip1, dt, units="minutes"){
-  trip1n <- trip1
-  trip1n$end_time <- trip1n$end_time + timeConvFuncs[[units]](dt)
-  trip1n
-}
-shiftStartTime <- function(trip, dt, units="minutes"){
-  tripn <- trip
-  tripn$start_time <- tripn$start_time + timeConvFuncs[[units]](dt)
-  tripn
-}
-shiftTripTimes <- function(trip, dt, units="minutes"){
-  moveStartTime( moveEndTime( trip, dt, units), dt, units)
-}
-
-relocEndStatn <- function(trip, statn){
-	trip2 <- trip
-	trip2$end_statn = statn
-	trip2
-}
-relocStartStatn <- function(trip, statn){
-	trip2 <- trip
-	trip2$start_statn = statn
-	trip2
-}
-relocTrip <- function(trip, start, end){
-	trip2 <- trip
-	trip2$start_statn <- start
-	trip2$end_statn <- end
-	trip2
-}
-reverseStatns <- function(trip) {
-	trip2 <- trip
-	trip2$start_statn <- trip$end_statn
-	trip2$end_statn <- trip$start_statn
-	trip2
-}
-
-
-```
-
-
-```{r disamgen}
-distBwnTrips <- function(trip1, trip2, statnLoc,
-			                    wt.dur=1,
-                          wt.dis=1,
-                          tsep=5,
-                          hsep=2){
-	if(ovlpngTrips(trip1, trip2)){
-		Inf
-	} else {
-    
-    psep12 <- 1/(1 + exp(hsep * (timeSprnTrips(trip1, trip2) - tsep) ) )
-		tdrn12 <- abs(drntrip(trip1) - drntrip(trip2))
-		d12.s <- distBwnStatns(trip1$start_statn, trip2$start_statn, statnLoc = statnLoc)
-		d12.e <- distBwnStatns(trip1$end_statn, trip2$end_statn, statnLoc=statnLoc)
-    ds <- c(tdrn12, d12.s, d12.e)
-    wts <- c(wt.dur, wt.dis, wt.dis)
-    psep12 * sqrt(sum(wts*(ds^2))/sum(wts)) 
-   }
-}
-
-
-```
-
-
 
 
 

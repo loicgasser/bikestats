@@ -50,6 +50,7 @@ extractGivenDays <- function(data,
 														 var.start_time="start_time",
 														 var.end_time="end_time"){
 	extidx <- (data[ , var.start_time] >= start) & ( data[, var.end_time] <= end)
+	extidx[ is.na(extidx)] <- FALSE
 	data[extidx, ]
 }
 extractWeek <- function(data, start, 
