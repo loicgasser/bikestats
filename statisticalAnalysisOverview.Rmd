@@ -7,9 +7,9 @@ output:
     number_sections: yes
     theme: journal
 ---
-```{r setup, include=TRUE}
+```{r setup, include=TRUE, echo=FALSE}
 knitr::opts_chunk$set(cache=FALSE)
-knitr::opts_chunk$set(echo=TRUE)
+knitr::opts_chunk$set(echo=FALSE)
 knitr::opts_chunk$set(fig.width=14)
 knitr::opts_chunk$set(fig.height=14)
 prjpath <- "~/work/citiviz/bikeSharing/bikestats/"
