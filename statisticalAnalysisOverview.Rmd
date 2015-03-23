@@ -6,6 +6,7 @@ output:
     highlight: tango
     number_sections: yes
     theme: journal
+bibliography: bikeSharingStats.bib
 ---
 ```{r setup, include=TRUE, echo=FALSE}
 knitr::opts_chunk$set(cache=FALSE)
@@ -56,6 +57,8 @@ Without going into the details of each trip, a bird's eye perspective should add
 	4. Is usage different on holidays? Or if their is a special event in the city?
 	5. How does usage depend on the season, and the weather?
 	6. How does usage vary between different bike sharing systems?
+	7. How are trip durations distributed? Are weekend trips longer than weekday trips?
+	8. How are the trip speeds distributed? Are trips close to office hours faster?
 
 After an exploratory analysis of an example data sets, we will build a model that predicts the usage of a BSS by a specified time resolution. The model should predict the usage for a day given the season, working day or a weekend or a holiday or a special event, the weather -- rainy or hot. A more detailed model should do the same by the hour. If it rains in the morning, should we expect more or less usage later in the day when it is dry?
 
