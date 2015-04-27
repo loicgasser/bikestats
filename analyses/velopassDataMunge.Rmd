@@ -1,0 +1,174 @@
+---
+title: 'Preparation of the Velopass data"
+output:
+  pdf_document: default
+  html_document:
+    highlight: tango
+    number_sections: yes
+    theme: journal
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache=FALSE)
+knitr::opts_chunk$set(echo=FALSE)
+knitr::opts_chunk$set(include=TRUE)
+knitr::opts_chunk$set(results="asis")
+knitr::opts_chunk$set(fig.width=12)
+knitr::opts_chunk$set(fig.height=14)
+prjpath <- "~/work/citiviz/bikeSharing/bikestats/"
+datapath <- paste(prjpath, "data/velopass_data/", sep="")
+analpath <- paste(prjpath, "analyses/", sep="")
+rcodepath <- paste(analpath, "Rcode/", sep="")
+setwd(analpath)
+library(lattice)
+```
+```{r loadLibsAndSource, include=FALSE}
+reqdpkgs <- c("lattice", "latticeExtra", "ggplot2", "reshape2", "plyr", "corrplot",
+							"Hmisc", "corrplot")
+lapply(reqdpkgs, library, character.only=TRUE)
+source(paste(rcodepath, "datamanip.R", sep=""))
+```
+
+#Introduction
+We prepare the velopass data. There are three sub-folders containing data for Velopass, each containing more than one csv. We load the csvs and combine them into one data csvs for each sub-folder
+
+#Data collation
+
+##Transactions campus 
+There are 6 pages of data in *transactions_campus_2010* for the year 2010. We will create a single data-frame from them.
+```{r datacollation}
+dd <- paste(datapath, "transactions_campus_2010/", sep="")
+vlp2010.1 <- read.csv(paste(dd, "transactions_page1_2010.csv", sep=""), 
+											sep=";",	stringsAsFactors=FALSE) 
+vlp2010.2 <- read.csv(paste(dd, "transactions_page2_2010.csv", sep=""), 
+											sep=";",	stringsAsFactors=FALSE) 
+vlp2010.3 <- read.csv(paste(dd, "transactions_page3_2010.csv", sep=""), 
+											sep=";",	stringsAsFactors=FALSE) 
+vlp2010.4 <- read.csv(paste(dd, "transactions_page4_2010.csv", sep=""), 
+											sep=";",	stringsAsFactors=FALSE) 
+vlp2010.5 <- read.csv(paste(dd, "transactions_page5_2010.csv", sep=""), 
+											sep=";",	stringsAsFactors=FALSE) 
+vlp2010.6 <- read.csv(paste(dd, "transactions_page6_2010.csv", sep=""), 
+											sep=";",	stringsAsFactors=FALSE) 
+```
+
+There is a column "X" in some of the data sets, which we will not include in our unified data frame. 
+```{r datacollation2}
+vlp2010.list <- list(vlp2010.1, vlp2010.2, vlp2010.3, vlp2010.4, vlp2010.5, vlp2010.6)
+vlp2010 <- do.call(rbind, lapply(vlp2010.list, function(vlpy) vlpy[, -6]))
+```
+We also need to use our naming scheme for the variables.
+```{r uniformNamingScheme}
+source(paste(rcodepath, "varNamingScheme.R", sep=""))
+nms.indata <- names(vlp2010)
+names(vlp2010) <- namingScheme(nms.indata,
+															 var.user_id="user_id",
+															 var.start_statn="from_station",
+															 var.end_statn="to_station",
+															 var.start_time="from_timestamp",
+															 var.end_time="to_timestamp",
+															 var.trip_id=NA)
+
+```
+
+
+
+The dates in _vlp2010_ are if the form "MON dd - h:m:s". To use our libraries we will have translate the Italian month names in MON to English, and prepend the dates by year.
+
+```{r italianMonthToEnglish}
+vlpDates <- rbind(vlp2010$start_time, vlp2010$end_time)
+vlpMonths <- unique( sapply(strsplit(x=vlpDates, split=" "), function(v) v[2]))
+
+itlToEngMonths <- data.frame(italian=c("Gen", "Feb", "Mar", "Apr", "Mag", "Giu",
+																			 "Lug", "Ago", "Set", "Ott", "Nov", "Dic"),
+															english=c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+																				"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+														 index=1:12)
+itlToEngMonths$italian <- as.character(itlToEngMonths$italian)
+itlToEngMonths$english <- as.character(itlToEngMonths$english)
+rownames(itlToEngMonths) <- itlToEngMonths$italian
+
+
+convertVLPdate <- function(date){
+	dsplit <- do.call(rbind, strsplit(x=date, split=" "))
+	ymd <- paste(2010,  itlToEngMonths[dsplit[,2], "index"], dsplit[,1], sep="-")
+	paste(ymd, dsplit[,5], sep=" ")
+}
+
+vlp2010$start_time <- convertVLPdate(vlp2010$start_time)
+vlp2010$end_time <- convertVLPdate(vlp2010$end_time)
+
+vlp2010 <- convertDateTime(vlp2010, c("start_time", "end_time"))
+
+```
+
+Some of the code below uses gender, which is not available in the data,
+```{r addgender}
+vlp2010$gender <- "Both"
+```
+
+Lets save the combined data-frame to a file,
+```{r writeCombinedDataSet}
+vlp2010.towrite <- vlp2010
+vlp2010.towrite$start_time <- as.character(vlp2010.towrite$start_time)
+vlp2010.towrite$end_time <- as.character(vlp2010.towrite$end_time)
+
+write.csv(vlp2010, paste(dd, "velopass_combined.csv", sep=""), row.names=FALSE)
+
+```
+
+The data in _vlp2010_ is for several months. Let us begin our analysis by looking at a single month's worth of data,
+```{r sampleMonth}
+source(paste(rcodepath, "datamanip.R",sep=""))
+data.sample <- extractGivenDays(vlp2010,
+																start=ymd_hms("2010-06-01 00:00:00"),
+																end=ymd_hms("2010-06-15 00:00:00"))
+
+#data.sample <- vlp2010[ months(vlp2010$start_time) == "June", ]
+
+```
+
+##Transactions Lausanne-Morges 2010
+There are two csvs.
+
+```{r dataload}
+dd <- paste(datapath, "transactions_lausanne-morges_2010", sep="/")
+vlplm2010 <- rbind(read.csv(paste(dd, "transactions_page1_2010.csv", sep="/"), sep=";", 
+													  stringsAsFactors=FALSE	),
+									 read.csv(paste(dd, "transactions_page2_2010.csv", sep="/"), sep=";", 
+										    		stringsAsFactors=FALSE	)
+									)
+```
+
+Having loaded the data, we will migrate the variable names to use our uniform naming convention,
+```{r unifynameslm}
+source(paste(rcodepath, "varNamingScheme.R", sep=""))
+nms.indata <- names(vlplm2010)
+names(vlplm2010) <- namingScheme(nms.indata,
+																 var.user_id="user_id",
+																 var.start_statn="from_station",
+																 var.end_statn="to_station",
+																 var.start_time="from_timestamp",
+																 var.end_time="to_timestamp",
+																 var.trip_id=NA)
+```
+The dates in _vlp2010_ are if the form "MON dd - h:m:s". To use our libraries we will have to translate the Italian month names in MON to English, and prepend the dates by year.
+
+```{r italianMonthToEnglishlm}
+vlplm2010$start_time <- convertVLPdate(vlplm2010$start_time)
+vlplm2010$end_time <- convertVLPdate(vlplm2010$end_time)
+vlplm2010 <- convertDateTime(vlplm2010, c("start_time", "end_time"))
+```
+
+We will now save the data in *vlplm2010* to a file,
+```{r writevlplm2010}
+vlp2010.towrite <- vlplm2010
+vlp2010.towrite$start_time <- as.character(vlp2010.towrite$start_time)
+vlp2010.towrite$end_time <- as.character(vlp2010.towrite$end_time)
+
+write.csv(vlp2010.towrite, 
+					paste(dd, "velopass_lausanne-morges_combined.csv", sep="/"), 
+					row.names=FALSE)
+```
+
+
+

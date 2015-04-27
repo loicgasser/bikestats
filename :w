@@ -1,0 +1,72 @@
+---
+title: "Analysis of the Velopass data: the Bird's Eye View"
+output:
+  html_document:
+    highlight: tango
+    number_sections: yes
+    theme: journal
+  pdf_document: default
+---
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(cache=FALSE)
+knitr::opts_chunk$set(echo=FALSE)
+knitr::opts_chunk$set(fig.width=14)
+knitr::opts_chunk$set(fig.height=14)
+prjpath <- "~/work/citiviz/bikeSharing/bikestats/"
+datapath <- paste(prjpath, "data/velopass_data/", sep="")
+analpath <- paste(prjpath, "analyses/", sep="")
+rcodepath <- paste(analpath, "Rcode/", sep="")
+setwd(analpath)
+library(lattice)
+```
+```{r loadLibsAndSource, include=TRUE}
+reqdpkgs <- c("lattice", "latticeExtra", "ggplot2", "reshape2", "plyr", "corrplot")
+lapply(reqdpkgs, library, character.only=TRUE)
+source(paste(rcodepath, "datamanip.R", sep=""))
+```
+
+
+
+
+#Introduction
+We look at the higher level properties of the Velopass data.
+
+#Data
+We have written the data into files on the disk, and read them from there,
+```{r readdata}
+dd <- paste(datapath, "transactions_campus_2010/", sep="")
+vlp2010 <- read.csv(paste(dd, "velopass_combined.csv", sep=""), stringsAsFactors=FALSE)
+```
+Once read, we have to convert the dates to date/time objects.
+```{r datetime}
+vlp2010 <- convertDateTime(vlp2010, c("start_time", "end_time"))
+vlp2010 <- vlp2010[ order(vlp2010$start_time), ]
+```
+
+#Usage over time
+How has the usage changed over time? Lets count the number of trips made every day.
+```{r tripsbyday}
+tripsByDay <- as.data.frame(table(floor_date(vlp2010$start_time, unit="day")),
+													 	stringsAsFactors=FALSE)
+names(tripsByDay) <- c("day", "num.trips")
+tripsByDay$dayOfWeek <- weekdays(ymd(tripsByDay$day))
+xyplot( num.trips ~ day, data=tripsByDay, 
+        type="b",
+        main="Number of trips each day")
+```
+
+```{r tripsbyweek}
+tripsByWeek <- as.data.frame(table(floor_date(vlp2010$start_time, unit="week")))
+names(tripsByWeek ) <- c("week", "num.trips")
+xyplot( num.trips ~ week, data=tripsByWeek, 
+        type="b",
+        main="Number of trips each week")
+```
+
+```{r tripsbymonth}
+tripsByMonth <- as.data.frame(table(floor_date(vlp2010$start_time, unit="month")))
+names(tripsByMonth ) <- c("month", "num.trips")
+xyplot( num.trips ~ month, data=tripsByMonth, 
+        type="b",
+        main="Number of trips each month")
+```

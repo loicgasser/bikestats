@@ -8,9 +8,11 @@ output:
     theme: journal
 bibliography: bikeSharingStats.bib
 ---
-```{r setup, include=TRUE, echo=FALSE}
+
+```{r setup, include=FALSE, echo=FALSE, cache=TRUE}
 knitr::opts_chunk$set(cache=FALSE)
 knitr::opts_chunk$set(echo=FALSE)
+knitr::opts_chunk$set(include=FALSE)
 knitr::opts_chunk$set(fig.width=14)
 knitr::opts_chunk$set(fig.height=14)
 prjpath <- "~/work/citiviz/bikeSharing/bikestats/"
@@ -36,7 +38,7 @@ We consider several viewpoints of the bike sharing system (BSS), which will be a
 5. __Geospatial perspective__: an analysis of the geospatial features of the BSS network
 6. __Multimodal transport perspective__: an analysis of how the BSS is situated in the larger multi-modal transportation network of the city
 7. __Operational perspective__: an analysis of the operations involved in running a BSS network
-8. __Business perspective__: an analysis of how the usage translates into revenue
+8. __Business perspective__: an analysis of how the usage translates to revenue
 
 
 Below we summarize what we intend to do in each of these perspectives. 
@@ -46,7 +48,8 @@ Below we summarize what we intend to do in each of these perspectives.
 Without going into the details of each trip, a bird's eye perspective should address the overall usage pattern of the BSS. This analysis will consist of the statistics of the aggregated usage. Questions that can be addressed include,
 
 	1. How has the usage grown over time?
-	2. What is the distribution of usage over time? We can consider the average and variability of usage  for several resolutions of time,
+	2. What is the distribution of usage over time? We can consider the average and
+		 variability of usage  for several resolutions of time,
 
 		 2a. the hour over a day,
 		 2b. by the weekday over a week,
@@ -175,4 +178,4 @@ How does the multimodal nature of a city's transport affect the performance of a
 * Can we suggest where selling points should be located?
 
 
-
+#References
