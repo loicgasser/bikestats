@@ -3,34 +3,34 @@ CREATE TYPE DIRECTION AS ENUM ('IN', 'OUT');
 
 
 -- BINCITTA DATA
-CREATE SCHEMA bincitta;
+CREATE SCHEMA bicincitta;
 
-CREATE TABLE bincitta.subnetworks (
+CREATE TABLE bicincitta.subnetworks (
   id            INTEGER NOT NULL PRIMARY KEY,
   name          VARCHAR(128) NOT NULL UNIQUE
 );
 
-CREATE TABLE bincitta.stations (
+CREATE TABLE bicincitta.stations (
   id            INTEGER NOT NULL PRIMARY KEY,
   name          VARCHAR(128) NOT NULL UNIQUE,
-  subnetwork_id INTEGER NOT NULL REFERENCES bincitta.subnetworks (id),
+  subnetwork_id INTEGER NOT NULL REFERENCES bicincitta.subnetworks (id),
   latitude      NUMERIC NOT NULL,
   longitude     NUMERIC NOT NULL
 );
-CREATE TABLE bincitta.users (
+CREATE TABLE bicincitta.users (
   id            INTEGER NOT NULL PRIMARY KEY,
-  subnetwork_id INTEGER NOT NULL REFERENCES bincitta.subnetworks (id),
+  subnetwork_id INTEGER NOT NULL REFERENCES bicincitta.subnetworks (id),
   gender        GENDER NOT NULL,
   postal_code   VARCHAR(16),
   address       VARCHAR(256),
   expires       DATE
 );
 
-CREATE TABLE bincitta.transactions (
+CREATE TABLE bicincitta.transactions (
   id            BIGINT NOT NULL PRIMARY KEY,
   timestamp     TIMESTAMP WITH TIME ZONE NOT NULL,
-  user_id       INTEGER NOT NULL REFERENCES bincitta.users (id),
-  station_id    INTEGER NOT NULL REFERENCES bincitta.stations (id),
+  user_id       INTEGER NOT NULL REFERENCES bicincitta.users (id),
+  station_id    INTEGER NOT NULL REFERENCES bicincitta.stations (id),
   direction     DIRECTION NOT NULL
 );
 
@@ -69,8 +69,8 @@ CREATE TABLE data.users (
 CREATE TABLE data.transactions (
   id            BIGINT NOT NULL PRIMARY KEY,
   timestamp     TIMESTAMP WITH TIME ZONE NOT NULL,
-  user_id       INTEGER NOT NULL REFERENCES bincitta.users (id),
-  station_id    INTEGER NOT NULL REFERENCES bincitta.stations (id),
+  user_id       INTEGER NOT NULL REFERENCES bicincitta.users (id),
+  station_id    INTEGER NOT NULL REFERENCES bicincitta.stations (id),
   direction     DIRECTION NOT NULL
 );
 

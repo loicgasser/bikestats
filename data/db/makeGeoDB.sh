@@ -26,6 +26,14 @@ create() {
 	createuser -D -e -E -i -l -R -S "${DBROLE}"
 	createdb -O "${DBROLE}" -E UTF-8 "${DBNAME}"
 	psql -U postgres "${DBNAME}" -c "CREATE EXTENSION postgis; CREATE EXTENSION postgis_topology;"
+	cat << EOF | psql -U postgres "${DBNAME}"
+ALTER SCHEMA public OWNER TO ${DBROLE};
+ALTER TABLE public.spatial_ref_sys OWNER TO ${DBROLE};
+ALTER SCHEMA topology OWNER TO ${DBROLE};
+ALTER TABLE topology.topology OWNER TO ${DBROLE};
+ALTER TABLE topology.layer OWNER TO ${DBROLE};
+ALTER SEQUENCE topology.topology_id_seq OWNER TO ${DBROLE};
+EOF
 	cat "${SCHEMAFILE}" | psql -U "${DBROLE}" "${DBNAME}"
 	set +vx
 }
