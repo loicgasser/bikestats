@@ -1,0 +1,753 @@
+
+% Default to the notebook output style
+
+    
+
+
+% Inherit from the specified cell style.
+
+
+
+
+    
+\documentclass{report}
+
+    
+    
+    \usepackage{graphicx} % Used to insert images
+    \usepackage{adjustbox} % Used to constrain images to a maximum size 
+    \usepackage{color} % Allow colors to be defined
+    \usepackage{enumerate} % Needed for markdown enumerations to work
+    \usepackage{geometry} % Used to adjust the document margins
+    \usepackage{amsmath} % Equations
+    \usepackage{amssymb} % Equations
+    \usepackage{eurosym} % defines \euro
+    \usepackage[mathletters]{ucs} % Extended unicode (utf-8) support
+    \usepackage[utf8x]{inputenc} % Allow utf-8 characters in the tex document
+    \usepackage{fancyvrb} % verbatim replacement that allows latex
+    \usepackage{grffile} % extends the file name processing of package graphics 
+                         % to support a larger range 
+    % The hyperref package gives us a pdf with properly built
+    % internal navigation ('pdf bookmarks' for the table of contents,
+    % internal cross-reference links, web links for URLs, etc.)
+    \usepackage{hyperref}
+    \usepackage{longtable} % longtable support required by pandoc >1.10
+    \usepackage{booktabs}  % table support for pandoc > 1.12.2
+    
+
+    
+    
+    \definecolor{orange}{cmyk}{0,0.4,0.8,0.2}
+    \definecolor{darkorange}{rgb}{.71,0.21,0.01}
+    \definecolor{darkgreen}{rgb}{.12,.54,.11}
+    \definecolor{myteal}{rgb}{.26, .44, .56}
+    \definecolor{gray}{gray}{0.45}
+    \definecolor{lightgray}{gray}{.95}
+    \definecolor{mediumgray}{gray}{.8}
+    \definecolor{inputbackground}{rgb}{.95, .95, .85}
+    \definecolor{outputbackground}{rgb}{.95, .95, .95}
+    \definecolor{traceback}{rgb}{1, .95, .95}
+    % ansi colors
+    \definecolor{red}{rgb}{.6,0,0}
+    \definecolor{green}{rgb}{0,.65,0}
+    \definecolor{brown}{rgb}{0.6,0.6,0}
+    \definecolor{blue}{rgb}{0,.145,.698}
+    \definecolor{purple}{rgb}{.698,.145,.698}
+    \definecolor{cyan}{rgb}{0,.698,.698}
+    \definecolor{lightgray}{gray}{0.5}
+    
+    % bright ansi colors
+    \definecolor{darkgray}{gray}{0.25}
+    \definecolor{lightred}{rgb}{1.0,0.39,0.28}
+    \definecolor{lightgreen}{rgb}{0.48,0.99,0.0}
+    \definecolor{lightblue}{rgb}{0.53,0.81,0.92}
+    \definecolor{lightpurple}{rgb}{0.87,0.63,0.87}
+    \definecolor{lightcyan}{rgb}{0.5,1.0,0.83}
+    
+    % commands and environments needed by pandoc snippets
+    % extracted from the output of `pandoc -s`
+    \DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+    % Add ',fontsize=\small' for more characters per line
+    \newenvironment{Shaded}{}{}
+    \newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{{#1}}}}
+    \newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.56,0.13,0.00}{{#1}}}
+    \newcommand{\DecValTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\FloatTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\CharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\StringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\CommentTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textit{{#1}}}}
+    \newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{{#1}}}
+    \newcommand{\AlertTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{{#1}}}}
+    \newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.02,0.16,0.49}{{#1}}}
+    \newcommand{\RegionMarkerTok}[1]{{#1}}
+    \newcommand{\ErrorTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{{#1}}}}
+    \newcommand{\NormalTok}[1]{{#1}}
+    
+    % Define a nice break command that doesn't care if a line doesn't already
+    % exist.
+    \def\br{\hspace*{\fill} \\* }
+    % Math Jax compatability definitions
+    \def\gt{>}
+    \def\lt{<}
+    % Document parameters
+    \title{bicincittaProblems}
+    
+    
+    
+
+    % Pygments definitions
+    
+\makeatletter
+\def\PY@reset{\let\PY@it=\relax \let\PY@bf=\relax%
+    \let\PY@ul=\relax \let\PY@tc=\relax%
+    \let\PY@bc=\relax \let\PY@ff=\relax}
+\def\PY@tok#1{\csname PY@tok@#1\endcsname}
+\def\PY@toks#1+{\ifx\relax#1\empty\else%
+    \PY@tok{#1}\expandafter\PY@toks\fi}
+\def\PY@do#1{\PY@bc{\PY@tc{\PY@ul{%
+    \PY@it{\PY@bf{\PY@ff{#1}}}}}}}
+\def\PY#1#2{\PY@reset\PY@toks#1+\relax+\PY@do{#2}}
+
+\expandafter\def\csname PY@tok@gd\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.63,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@gu\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.50,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@gt\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.27,0.87}{##1}}}
+\expandafter\def\csname PY@tok@gs\endcsname{\let\PY@bf=\textbf}
+\expandafter\def\csname PY@tok@gr\endcsname{\def\PY@tc##1{\textcolor[rgb]{1.00,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@cm\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@vg\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@m\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@mh\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@go\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.53,0.53,0.53}{##1}}}
+\expandafter\def\csname PY@tok@ge\endcsname{\let\PY@it=\textit}
+\expandafter\def\csname PY@tok@vc\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@il\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@cs\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@cp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.74,0.48,0.00}{##1}}}
+\expandafter\def\csname PY@tok@gi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.63,0.00}{##1}}}
+\expandafter\def\csname PY@tok@gh\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@ni\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.60,0.60,0.60}{##1}}}
+\expandafter\def\csname PY@tok@nl\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.63,0.63,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nn\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@no\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.53,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@na\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.49,0.56,0.16}{##1}}}
+\expandafter\def\csname PY@tok@nb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nc\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@nd\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.67,0.13,1.00}{##1}}}
+\expandafter\def\csname PY@tok@ne\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.82,0.25,0.23}{##1}}}
+\expandafter\def\csname PY@tok@nf\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@si\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.53}{##1}}}
+\expandafter\def\csname PY@tok@s2\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@vi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@nt\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nv\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@s1\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@kd\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@sh\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sc\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sx\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@bp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@c1\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@kc\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@c\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@mf\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@err\endcsname{\def\PY@bc##1{\setlength{\fboxsep}{0pt}\fcolorbox[rgb]{1.00,0.00,0.00}{1,1,1}{\strut ##1}}}
+\expandafter\def\csname PY@tok@mb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@ss\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@sr\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.53}{##1}}}
+\expandafter\def\csname PY@tok@mo\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@kn\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@mi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@gp\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@o\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@kr\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@s\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@kp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@w\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.73,0.73}{##1}}}
+\expandafter\def\csname PY@tok@kt\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.69,0.00,0.25}{##1}}}
+\expandafter\def\csname PY@tok@ow\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.67,0.13,1.00}{##1}}}
+\expandafter\def\csname PY@tok@sb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@k\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@se\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sd\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+
+\def\PYZbs{\char`\\}
+\def\PYZus{\char`\_}
+\def\PYZob{\char`\{}
+\def\PYZcb{\char`\}}
+\def\PYZca{\char`\^}
+\def\PYZam{\char`\&}
+\def\PYZlt{\char`\<}
+\def\PYZgt{\char`\>}
+\def\PYZsh{\char`\#}
+\def\PYZpc{\char`\%}
+\def\PYZdl{\char`\$}
+\def\PYZhy{\char`\-}
+\def\PYZsq{\char`\'}
+\def\PYZdq{\char`\"}
+\def\PYZti{\char`\~}
+% for compatibility with earlier versions
+\def\PYZat{@}
+\def\PYZlb{[}
+\def\PYZrb{]}
+\makeatother
+
+
+    % Exact colors from NB
+    \definecolor{incolor}{rgb}{0.0, 0.0, 0.5}
+    \definecolor{outcolor}{rgb}{0.545, 0.0, 0.0}
+
+
+
+    
+    % Prevent overflowing lines due to hard-to-break entities
+    \sloppy 
+    % Setup hyperref package
+    \hypersetup{
+      breaklinks=true,  % so long urls are correctly broken across lines
+      colorlinks=true,
+      urlcolor=blue,
+      linkcolor=darkorange,
+      citecolor=darkgreen,
+      }
+    % Slightly bigger margins than the latex defaults
+    
+    \geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+    
+    
+
+    \begin{document}
+    
+    
+    
+    \maketitle
+    
+    
+    \tableofcontents
+
+
+    
+    \section{Problems in the Bicincitta data set from
+2013}\label{problems-in-the-bicincitta-data-set-from-2013}
+
+There are problems with the Bicincitta data that we need to address
+before loading the data into a reliable and proper data-base. We will
+point out these problems using examples, and measure their magnitude
+using systematic analysis, and then speculate about the source of these
+problems.
+
+    \subsection{Data}\label{data}
+
+We will load the data from JSONs provided to us by Bicincitta at the end
+of April 2015.
+
+
+    The resulting data is in the form of lists of dictionaries. We can take
+a peek at the keys in each of the four data types, by creating a data
+frame and displaying the first few rows.
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+a subnetwork is described by, 
+	id
+	name
+
+ a station is described by,
+	name
+	longitude
+	subnetwork\_name
+	latitude
+	id
+	subnetwork\_id
+
+ a user is described by 
+	subnetwork\_id
+	gender
+	expires
+	postal\_code
+	subnetwork\_name
+	address
+	id
+
+ a transaction is described by, 
+	direction
+	user\_id
+	station\_id
+	event\_time
+	id
+    \end{Verbatim}
+
+    The resulting dictionaries have ids that are UTF-8 strings. We can
+change these to integers to make our work easier,
+
+
+    There are keys in a transaction that do not seem to correspond to the
+data, but refer to the time at which the data was loaded into the JSON
+provided to us. We will drop these variables, and change the
+\emph{event\_time} to a time object. Following that we will sort the
+transactions by the event time
+
+
+    We also sort the subnetworks and stations by their \emph{id}.
+
+
+    Stations and users have been assigned a \emph{subnetwork\_id} in the
+data. We can add the subnetwork name to these data,
+
+
+    \subsection{Who are the users?}\label{who-are-the-users}
+
+The simplest question may be the fraction of females vs males,
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+Of all the users  60  percent are female  and  39  percent males.
+    \end{Verbatim}
+
+    It would be interesting if 60\% of the users were in fact female.
+However, as we will see later there seems to be a problem of user
+duplicacy biased towards females.
+
+    \subsection{Subnetworks for stations and
+users}\label{subnetworks-for-stations-and-users}
+
+Are the \emph{subnetwork\_id}s for stations and users sensible? The
+subnetworks that the stations fall in are
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+Subnetworks that have stations assigned to them
+    \end{Verbatim}
+
+            \begin{Verbatim}[commandchars=\\\{\}]
+	{} {}     id               name
+          0    1            La Cote
+          1    2     Agglo Fribourg
+          2    3              Bulle
+          3    4    Les Lacs-Romont
+          4    6           Chablais
+          5    7     Valais Central
+          6    8  Yverdon-les-Bains
+          7    9    Lausanne-Morges
+          8   10             Campus
+          9   11            Riviera
+          10  12    Lugano-Paradiso
+\end{Verbatim}
+        
+    We see that stations cover only 11 of the 18 subnetworks. Looking at the
+subnetworks with no stations,
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+Subnetworks without any assigned stations
+    \end{Verbatim}
+
+            \begin{Verbatim}[commandchars=\\\{\}]
+	     id       name
+          0   5       Bâle
+          1  13  PubliBike
+          2  14      Vevey
+          3  15     Morges
+          4  16      Ouchy
+          5  17   Paradiso
+          6  18       Cern
+\end{Verbatim}
+        
+    we can see why there are no stations corresponding to these subnetworks.
+Basel, and Cern because Bicincitta have not given us data for these
+regions. Vevey, Morges, Ouchy, and Paradiso include stations subsumed by
+other subnetworks. These networks may be a remnant from previous
+versions of the data. This leaves \textbf{PubliBike} unexplained. As it
+turns out, there are users that have been assigned the subnetwork
+PubliBike (\emph{id} 13). In fact we see later that the users who have
+registered transactions in the data have been assigned only PubliBike,
+and no other subnetwork.
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+Number of users from subnetwork PubliBike 58927
+    \end{Verbatim}
+
+    Users that have been assigned subnetwork PubliBike compose 70\% of the
+total users in the data. However we are not going to see PubliBike in
+any of their transactions as there are no stations for the subnetwork
+PubliBike! What about other subnetworks without stations?
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+subnetworks assigned to users
+    \end{Verbatim}
+
+            \begin{Verbatim}[commandchars=\\\{\}]
+{\color{outcolor}Out[{\color{outcolor}607}]:}     id               name
+          0    2     Agglo Fribourg
+          1    6           Chablais
+          2    7     Valais Central
+          3    8  Yverdon-les-Bains
+          4    9    Lausanne-Morges
+          5   10             Campus
+          6   12    Lugano-Paradiso
+          7   13          PubliBike
+          8   14              Vevey
+          9   16              Ouchy
+          10  17           Paradiso
+          11  18               Cern
+\end{Verbatim}
+        
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+subnets without any users
+    \end{Verbatim}
+
+            \begin{Verbatim}[commandchars=\\\{\}]
+{\color{outcolor}Out[{\color{outcolor}608}]:}    id             name
+          0   1          La Cote
+          1   3            Bulle
+          2   4  Les Lacs-Romont
+          3   5             Bâle
+          4  11          Riviera
+          5  15           Morges
+\end{Verbatim}
+        
+    Comparing the subnets for users to subnets with stations we see that
+there are \textbf{only 7 subnets} for which we have stations as well as
+users,
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+subnets with stations as well as users
+    \end{Verbatim}
+
+            \begin{Verbatim}[commandchars=\\\{\}]
+{\color{outcolor}Out[{\color{outcolor}609}]:}    id               name
+          0   2     Agglo Fribourg
+          1   6           Chablais
+          2   7     Valais Central
+          3   8  Yverdon-les-Bains
+          4   9    Lausanne-Morges
+          5  10             Campus
+          6  12    Lugano-Paradiso
+\end{Verbatim}
+        
+    As a summary, let us tabulate the fraction of users in each of the
+subnets,
+
+
+
+            \begin{Verbatim}[commandchars=\\\{\}]
+{\color{outcolor}Out[{\color{outcolor}611}]:}       id               name  numUsers
+          0      1            La Cote         0
+          1      3              Bulle         0
+          2      4    Les Lacs-Romont         0
+          3      5               Bâle         0
+          4     11            Riviera         0
+          5     15             Morges         0
+          6      6           Chablais         3
+          7     16              Ouchy         3
+          8     17           Paradiso         3
+          9     14              Vevey         4
+          10  2011            unknown       152
+          11  2005            unknown       469
+          12     7     Valais Central       530
+          13    18               Cern       721
+          14     8  Yverdon-les-Bains       773
+          15     2     Agglo Fribourg       810
+          16     9    Lausanne-Morges      2183
+          17    12    Lugano-Paradiso      3425
+          18    10             Campus     15871
+          19    13          PubliBike     58927
+\end{Verbatim}
+        
+
+        
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{bicincittaProblems_files/bicincittaProblems_30_1.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    So, most of the users are in PubliBike, which could create a problem as
+there are no stations associated to PubliBike. Lets first look at the
+transactions before we try to find a solution to this problem.
+
+\subsection{Transaction users, stations, and
+subnetworks}\label{transaction-users-stations-and-subnetworks}
+
+We begin by looking at how many users actually use the bike system (
+have valid transactions)
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+fraction of users who have registered a transaction 0.10673152586
+    \end{Verbatim}
+
+    Only 10\% users have registered a transaction! Are all the transactions
+of a user in the same subnetwork?
+
+
+
+            \begin{Verbatim}[commandchars=\\\{\}]
+{\color{outcolor}Out[{\color{outcolor}800}]:}       user\_id  assigned\_subnet  numStations  numSubnets  numTrxns
+          3462   108132               13           56           8      2180
+          4469   111523               13           46           7      2110
+          5399    84545               13           43           7      5134
+          3463   108133               13           43           6      3280
+          4673   112287               13           23           3       540
+\end{Verbatim}
+        
+
+        
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{bicincittaProblems_files/bicincittaProblems_36_1.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{bicincittaProblems_files/bicincittaProblems_37_1.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    A simple question might guide us. How many transactions belong to
+Publibike users ( who have subnetwork\_id PubliBike) ?
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+The subnetworks of the users who make transactions make a set([13])
+    \end{Verbatim}
+
+    So, \textbf{from the view point of the users, all the transactions are
+in the subnetwork PubliBike}
+
+    How many transactions in a subnetwork of the stations?
+
+
+    Now we can make a table for subnetworks, counting the number of trxns
+through user and station \emph{subnetwork\_id}, in addition to the
+number of users.
+
+
+
+        
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{bicincittaProblems_files/bicincittaProblems_45_1.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{bicincittaProblems_files/bicincittaProblems_45_2.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{bicincittaProblems_files/bicincittaProblems_45_3.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+
+            \begin{Verbatim}[commandchars=\\\{\}]
+{\color{outcolor}Out[{\color{outcolor}764}]:}                      id               name  numStations  numTrxns\_stns  \textbackslash{}
+          name                                                                     
+          Vevey                14              Vevey            0              0   
+          Cern                 18               Cern            0              0   
+          unknown            2005            unknown            0              0   
+          unknown            2011            unknown            0              0   
+          Paradiso             17           Paradiso            0              0   
+          Ouchy                16              Ouchy            0              0   
+          PubliBike            13          PubliBike            0              0   
+          Morges               15             Morges            0              0   
+          Bâle                  5               Bâle            0              0   
+          Bulle                 3              Bulle            2            566   
+          Riviera              11            Riviera            5          11576   
+          Valais Central        7     Valais Central            7           5077   
+          Les Lacs-Romont       4    Les Lacs-Romont            9           4964   
+          Yverdon-les-Bains     8  Yverdon-les-Bains            9          33227   
+          Agglo Fribourg        2     Agglo Fribourg           10          17630   
+          Chablais              6           Chablais           10           2377   
+          Lausanne-Morges       9    Lausanne-Morges           11          12157   
+          Lugano-Paradiso      12    Lugano-Paradiso           13          66415   
+          La Cote               1            La Cote           13          71292   
+          Campus               10             Campus           15          65853   
+          
+                             numTrxns\_users  numUsers  
+          name                                         
+          Vevey                           0         4  
+          Cern                            0       721  
+          unknown                         0       469  
+          unknown                         0       152  
+          Paradiso                        0         3  
+          Ouchy                           0         3  
+          PubliBike                  291134     58927  
+          Morges                          0         0  
+          Bâle                            0         0  
+          Bulle                           0         0  
+          Riviera                         0         0  
+          Valais Central                  0       530  
+          Les Lacs-Romont                 0         0  
+          Yverdon-les-Bains               0       773  
+          Agglo Fribourg                  0       810  
+          Chablais                        0         3  
+          Lausanne-Morges                 0      2183  
+          Lugano-Paradiso                 0      3425  
+          La Cote                         0         0  
+          Campus                          0     15871  
+\end{Verbatim}
+        
+    \subsection{User addresses}\label{user-addresses}
+
+There are several problems associated with user addresses. We have
+already noticed, and fixed, that the provided addresses in the JSON have
+not been \emph{unquoted} from their web encoding. Here we continue to
+explore other problems that may arise in the addresses.
+
+We want to count the number of users at one address. Because the
+addresses have been provided as strings, we have to be able to aggregate
+all address strings that describe the same address. We have written a
+python function to do this task, which takes the address and postal-code
+strings to provide a combined string taking into account some empirical
+disambiguation criteria such as \emph{Av, Ave}, for \emph{Avenue}.
+
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+number of users with available address 21659
+number of these addresses that are unique 15446
+    \end{Verbatim}
+
+
+    What fraction of unique addresses have multiple users?
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+0.230545124951
+    \end{Verbatim}
+
+    How many users at addresses with multiple users?
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+9774
+    \end{Verbatim}
+
+    which corresponds to a fraction of all users with available address,
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+0.451267371531
+    \end{Verbatim}
+
+    Multiple users at the same address could be actual multiple people, or
+multiple registrations by the same person, or a glitch in the data. We
+can consider as an example the address with the most multiplicity of 53,
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+address:  via lambertenghi 1; 6900 , number of users:  53
+    \end{Verbatim}
+
+    We could say more about the multiple users at the same address if we
+look at their transactions. However as it turns out, we \textbf{do not
+have addresses for users who have registered transactions in the data},
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+False
+    \end{Verbatim}
+
+    We can look at the subnetwork with addresses assigned to the
+\emph{multi} users,
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+subnetworks with addresses assigned to multiple users set([2, 7, 8, 9, 10, 12, 18, 2005, 2011])
+    \end{Verbatim}
+
+    Some of the multi-user addresses have more than one subnetworks (
+through the users at that address)
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+Subnetworks for users living at addresses with multiple registered users
+    \end{Verbatim}
+
+    There are as many as 37 users assigned to the same address that also
+have more than subnetwork assigned. Addresses with several users might
+represent problems of multiple subscription. For example, if we look at
+addresses with more than 10 users,
+
+
+            \begin{Verbatim}[commandchars=\\\{\}]
+{\color{outcolor}Out[{\color{outcolor}806}]:}                        address  numFemales  numMales  numUsers  \textbackslash{}
+          143   avenue des bains 9; 1007          37         0        37   
+          40    route cantonale 33; 1025          25         0        25   
+          105  avenue des bains 11; 1007          23         0        23   
+          48    place du tunnel 17; 1005          23         0        23   
+          
+                                  subnetworks  
+          143  set([Lausanne-Morges, Campus])  
+          40   set([Lausanne-Morges, Campus])  
+          105  set([Lausanne-Morges, Campus])  
+          48   set([Lausanne-Morges, Campus])  
+\end{Verbatim}
+        
+    we see that the user is over-whelmingly females. However, a look at the
+lower end of such addresses seems alright,
+
+
+            \begin{Verbatim}[commandchars=\\\{\}]
+{\color{outcolor}Out[{\color{outcolor}807}]:}                              address  numFemales  numMales  numUsers  \textbackslash{}
+          3                 poudrière 24; 1950           3         0         3   
+          61          avenue beaulieu 20; 1004           2         1         3   
+          23   avenue louis-ruchonnet 31; 1003           2         1         3   
+          104               eichenweg 12; 1718           2         1         3   
+          67        rue saint-rochemin 5; 1004           2         1         3   
+          
+                                  subnetworks  
+          3     set([Campus, Valais Central])  
+          61   set([Lausanne-Morges, Campus])  
+          23   set([Lausanne-Morges, Campus])  
+          104   set([Agglo Fribourg, Campus])  
+          67   set([Lausanne-Morges, Campus])  
+\end{Verbatim}
+        
+    These particular addresses appear sensible. There could be more than one
+person living at these addresses who have signed up with the bike
+system, albeit in different subnetworks. Or may be it is the same person
+with 2 different sign-ups in two different sub-networks. This raises the
+question: \textbf{How are users registered by the system? One individual
+= one signup? Or does a user need a sign-up for each subnetwork that she
+wants to use?} If it is the latter, then the provided \emph{user\_ids}
+become less useful, because the same individual will appear as different
+users according to the \emph{user\_ids}.
+
+
+            \begin{Verbatim}[commandchars=\\\{\}]
+{\color{outcolor}Out[{\color{outcolor}808}]:}                           address  numFemales  numMales  numUsers
+          18       via lambertenghi 1; 6900          52         1        53
+          2288  chemin des falaises 3; 1005          52         0        52
+          1349   chemin des berges 12; 1022          41         0        41
+          2150     avenue des bains 9; 1007          37         0        37
+          332      via monte carmen 4; 6900          33         0        33
+          287      route cantonale 33; 1025          25         0        25
+          1444      via madonnetta 23; 6900          24         0        24
+          1649     place du tunnel 17; 1005          23         0        23
+          1826    avenue des bains 11; 1007          23         0        23
+          1997       rue de genève 76; 1004          22         0        22
+          1801     route cantonale 35; 1025          22         0        22
+          2534           via zurigo 1; 6900          20         1        21
+\end{Verbatim}
+        
+
+            \begin{Verbatim}[commandchars=\\\{\}]
+{\color{outcolor}Out[{\color{outcolor}809}]:}                         address  numFemales  numMales  numUsers
+          0      bonne-espérance 28; 1006           1         0         1
+          1     37 route cantonnale; 1025           1         0         1
+          2     avenue de la dôle 4; 1005           1         0         1
+          3             abbesses 21; 2012           1         0         1
+          4  chemin de ponfilet 100; 1093           0         1         1
+\end{Verbatim}
+        
+
+    % Add a bibliography block to the postdoc
+    
+    
+    
+    \end{document}

@@ -8,25 +8,29 @@ DBROLE=$3
 SCHEMAFILE=$4
 
 
+DBHOST=dbs.int.citiviz.com
+DBCREDENTIALS="-h ${DBHOST} -U citiviz"
+
 dump() {
 	set -vx
-	pg_dump -Fc "${DBNAME}" > "${DBNAME}$(date +%H%m%d-%H%M).pgsql.dump"
+	pg_dump ${DBCREDENTIALS} -Fc "${DBNAME}" > "${DBNAME}$(date +%H%m%d-%H%M).pgsql.dump"
 	set +vx
 }
 
 drop() {
 	set -vx
-	dropdb "$DBNAME"
-	dropuser "$DBROLE"
+	dropdb ${DBCREDENTIALS} "$DBNAME"
+	dropuser ${DBCREDENTIALS} "$DBROLE"
 	set +vx
 }
 
 create() {
 	set -vx
-	createuser -D -e -E -i -l -R -S "${DBROLE}"
-	createdb -O "${DBROLE}" -E UTF-8 "${DBNAME}"
-	psql -U postgres "${DBNAME}" -c "CREATE EXTENSION postgis; CREATE EXTENSION postgis_topology;"
-	cat << EOF | psql -U postgres "${DBNAME}"
+	createuser ${DBCREDENTIALS} -D -e -E -i -l -R -S "${DBROLE}"
+	createdb ${DBCREDENTIALS} -O "${DBROLE}" -E UTF-8 "${DBNAME}"
+	cat << EOF | psql ${DBCREDENTIALS} "${DBNAME}"
+CREATE EXTENSION postgis;
+CREATE EXTENSION postgis_topology;
 ALTER SCHEMA public OWNER TO ${DBROLE};
 ALTER TABLE public.spatial_ref_sys OWNER TO ${DBROLE};
 ALTER SCHEMA topology OWNER TO ${DBROLE};
@@ -34,7 +38,7 @@ ALTER TABLE topology.topology OWNER TO ${DBROLE};
 ALTER TABLE topology.layer OWNER TO ${DBROLE};
 ALTER SEQUENCE topology.topology_id_seq OWNER TO ${DBROLE};
 EOF
-	cat "${SCHEMAFILE}" | psql -U "${DBROLE}" "${DBNAME}"
+	cat "${SCHEMAFILE}" | psql -h ${DBHOST} -U "${DBROLE}" "${DBNAME}"
 	set +vx
 }
 

@@ -44,8 +44,27 @@ CREATE TABLE bicincitta.transactions (
 
 CREATE SCHEMA data;
 
+CREATE TABLE data.communes (
+	id						INTEGER NOT NULL PRIMARY KEY,
+	name 					VARCHAR(128) NOT NULL UNIQUE,
+	canton				VARCHAR(128) NOT NULL
+)
+SELECT AddGeometryColumn('data', 'communes', 'boundary', 'MULTIPOLYGON', 2);
+
+CREATE TABLE data.aggloes (
+	id						INTEGER NOT NULL PRIMARY KEY,
+);
+SELECT AddGeometryColumn('data', 'aggloes', 'buffer', 'POLYGON', 2);
+SELECT AddGeometryColumn('data', 'aggloes', 'boundary', 'MULTIPOLYGON', 2);
+
+CREATE TABLE data.map_commune_to_agglo(
+	commune_id		INTEGER NOT NULL REFERENCES data.communes (id)	PRIMARY KEY,
+	agglo_id			INTEGER NOT NULL REFERENCES data.aggloes (id)
+)
+
 CREATE TABLE data.networks (
   id            INTEGER NOT NULL PRIMARY KEY,
+	agglo_id			INTEGER NOT NULL REFERENCES data.aggloes (id),
   name          VARCHAR(128) NOT NULL UNIQUE
 );
 

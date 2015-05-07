@@ -1,0 +1,3 @@
+((*- extends 'report.tplx' -*))
+((* block input_group *))
+((* endblock input_group *))
