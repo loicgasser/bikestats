@@ -45,57 +45,57 @@ CREATE TABLE bicincitta.transactions (
 CREATE SCHEMA data;
 
 CREATE TABLE data.communes (
-	id						INTEGER NOT NULL PRIMARY KEY,
-	name 					VARCHAR(128) NOT NULL UNIQUE,
-	canton				VARCHAR(128) NOT NULL
+	id	      INTEGER NOT NULL PRIMARY KEY,
+	name 	      VARCHAR(128) NOT NULL UNIQUE,
+	canton	      VARCHAR(128) NOT NULL
 )
 SELECT AddGeometryColumn('data', 'communes', 'boundary', 'MULTIPOLYGON', 2);
 
 CREATE TABLE data.aggloes (
-	id						INTEGER NOT NULL PRIMARY KEY,
+	id	      INTEGER NOT NULL PRIMARY KEY
 );
 SELECT AddGeometryColumn('data', 'aggloes', 'buffer', 'POLYGON', 2);
 SELECT AddGeometryColumn('data', 'aggloes', 'boundary', 'MULTIPOLYGON', 2);
 
 CREATE TABLE data.map_commune_to_agglo(
-	commune_id		INTEGER NOT NULL REFERENCES data.communes (id)	PRIMARY KEY,
-	agglo_id			INTEGER NOT NULL REFERENCES data.aggloes (id)
+	commune_id    INTEGER NOT NULL REFERENCES data.communes (id) PRIMARY KEY,
+	agglo_id      INTEGER NOT NULL REFERENCES data.aggloes (id)
 )
 
 CREATE TABLE data.networks (
-  id            INTEGER NOT NULL PRIMARY KEY,
-	agglo_id			INTEGER NOT NULL REFERENCES data.aggloes (id),
-  name          VARCHAR(128) NOT NULL UNIQUE
+  id                  INTEGER NOT NULL PRIMARY KEY,
+  agglo_id            INTEGER NOT NULL REFERENCES data.aggloes (id),
+  name                VARCHAR(128) NOT NULL UNIQUE
 );
 
 CREATE TABLE data.stations (
-  id            INTEGER NOT NULL PRIMARY KEY,
-  name          VARCHAR(128) NOT NULL UNIQUE,
-  network_id INTEGER NOT NULL REFERENCES data.networks (id)
+  id                  INTEGER NOT NULL PRIMARY KEY,
+  name                VARCHAR(128) NOT NULL UNIQUE,
+  network_id          INTEGER NOT NULL REFERENCES data.networks (id)
 );
 SELECT AddGeometryColumn('data', 'stations', 'position', 21781, 'POINT', 3);
 
 CREATE TABLE data.users (
-  id            INTEGER NOT NULL PRIMARY KEY,
-  network_id    INTEGER NOT NULL REFERENCES data.networks (id),
-  gender        GENDER,
-  postal_code   VARCHAR(16),
-  address       VARCHAR(256),
-  created       DATE,
-  expires       DATE
+  id                  INTEGER NOT NULL PRIMARY KEY,
+  network_id          INTEGER NOT NULL REFERENCES data.networks (id),
+  gender              GENDER,
+  postal_code         VARCHAR(16),
+  address             VARCHAR(256),
+  created             DATE,
+  expires             DATE
 );
 
 CREATE TABLE data.transactions (
-  id            BIGINT NOT NULL PRIMARY KEY,
-  timestamp     TIMESTAMP WITH TIME ZONE NOT NULL,
-  user_id       INTEGER NOT NULL REFERENCES bicincitta.users (id),
-  station_id    INTEGER NOT NULL REFERENCES bicincitta.stations (id),
-  direction     DIRECTION NOT NULL
+  id                  BIGINT NOT NULL PRIMARY KEY,
+  timestamp           TIMESTAMP WITH TIME ZONE NOT NULL,
+  user_id             INTEGER NOT NULL REFERENCES bicincitta.users (id),
+  station_id          INTEGER NOT NULL REFERENCES bicincitta.stations (id),
+  direction           DIRECTION NOT NULL
 );
 
 CREATE TABLE data.trips (
-  out_tx        BIGINT NOT NULL REFERENCES data.transactions (id),
-  in_tx         BIGINT NOT NULL REFERENCES data.transactions (id),
+  out_tx              BIGINT NOT NULL REFERENCES data.transactions (id),
+  in_tx               BIGINT NOT NULL REFERENCES data.transactions (id),
 
   PRIMARY KEY (out_tx, in_tx)
 );
@@ -173,7 +173,7 @@ CREATE VIEW data.trips_view AS (
     t_out.user_created                  AS user_created,
     t_out.user_expires                  AS user_expires,
     t_out.user_network_id               AS user_network_id,
-		t_out.user_network_name							AS user_network_name	
+    t_out.user_network_name		AS user_network_name
   FROM data.trips           AS t
   JOIN views.transactions   AS t_out ON t_out.id = t.out_tx
   JOIN views.transactions   AS t_in  ON t_in.id = t.in_tx
