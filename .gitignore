@@ -76,3 +76,9 @@ target/
 
 #data: some data files can be large, only zips will be in the repo
 *.csv
+
+#tex: unnecessary files
+*.aux
+*.log
+*.toc
+*.out

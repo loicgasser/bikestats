@@ -1,0 +1,563 @@
+
+% Default to the notebook output style
+
+    
+
+
+% Inherit from the specified cell style.
+
+
+
+
+    
+\documentclass{report}
+
+    
+    
+    \usepackage{graphicx} % Used to insert images
+    \usepackage{adjustbox} % Used to constrain images to a maximum size 
+    \usepackage{color} % Allow colors to be defined
+    \usepackage{enumerate} % Needed for markdown enumerations to work
+    \usepackage{geometry} % Used to adjust the document margins
+    \usepackage{amsmath} % Equations
+    \usepackage{amssymb} % Equations
+    \usepackage{eurosym} % defines \euro
+    \usepackage[mathletters]{ucs} % Extended unicode (utf-8) support
+    \usepackage[utf8x]{inputenc} % Allow utf-8 characters in the tex document
+    \usepackage{fancyvrb} % verbatim replacement that allows latex
+    \usepackage{grffile} % extends the file name processing of package graphics 
+                         % to support a larger range 
+    % The hyperref package gives us a pdf with properly built
+    % internal navigation ('pdf bookmarks' for the table of contents,
+    % internal cross-reference links, web links for URLs, etc.)
+    \usepackage{hyperref}
+    \usepackage{longtable} % longtable support required by pandoc >1.10
+    \usepackage{booktabs}  % table support for pandoc > 1.12.2
+    
+		\usepackage[affil-it]{authblk}
+		
+
+    
+    
+    \definecolor{orange}{cmyk}{0,0.4,0.8,0.2}
+    \definecolor{darkorange}{rgb}{.71,0.21,0.01}
+    \definecolor{darkgreen}{rgb}{.12,.54,.11}
+    \definecolor{myteal}{rgb}{.26, .44, .56}
+    \definecolor{gray}{gray}{0.45}
+    \definecolor{lightgray}{gray}{.95}
+    \definecolor{mediumgray}{gray}{.8}
+    \definecolor{inputbackground}{rgb}{.95, .95, .85}
+    \definecolor{outputbackground}{rgb}{.95, .95, .95}
+    \definecolor{traceback}{rgb}{1, .95, .95}
+    % ansi colors
+    \definecolor{red}{rgb}{.6,0,0}
+    \definecolor{green}{rgb}{0,.65,0}
+    \definecolor{brown}{rgb}{0.6,0.6,0}
+    \definecolor{blue}{rgb}{0,.145,.698}
+    \definecolor{purple}{rgb}{.698,.145,.698}
+    \definecolor{cyan}{rgb}{0,.698,.698}
+    \definecolor{lightgray}{gray}{0.5}
+    
+    % bright ansi colors
+    \definecolor{darkgray}{gray}{0.25}
+    \definecolor{lightred}{rgb}{1.0,0.39,0.28}
+    \definecolor{lightgreen}{rgb}{0.48,0.99,0.0}
+    \definecolor{lightblue}{rgb}{0.53,0.81,0.92}
+    \definecolor{lightpurple}{rgb}{0.87,0.63,0.87}
+    \definecolor{lightcyan}{rgb}{0.5,1.0,0.83}
+    
+    % commands and environments needed by pandoc snippets
+    % extracted from the output of `pandoc -s`
+    \DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+    % Add ',fontsize=\small' for more characters per line
+    \newenvironment{Shaded}{}{}
+    \newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{{#1}}}}
+    \newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.56,0.13,0.00}{{#1}}}
+    \newcommand{\DecValTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\FloatTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{{#1}}}
+    \newcommand{\CharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\StringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{{#1}}}
+    \newcommand{\CommentTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textit{{#1}}}}
+    \newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{{#1}}}
+    \newcommand{\AlertTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{{#1}}}}
+    \newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.02,0.16,0.49}{{#1}}}
+    \newcommand{\RegionMarkerTok}[1]{{#1}}
+    \newcommand{\ErrorTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{{#1}}}}
+    \newcommand{\NormalTok}[1]{{#1}}
+    
+    % Define a nice break command that doesn't care if a line doesn't already
+    % exist.
+    \def\br{\hspace*{\fill} \\* }
+    % Math Jax compatability definitions
+    \def\gt{>}
+    \def\lt{<}
+    % Document parameters
+		\title{A preliminary analysis of the Bicincitta data}
+		\author{Vishal Sood}
+		\affil{Citiviz S\'arl, Lausanne}
+		\date{\today}
+    
+    
+    
+
+    % Pygments definitions
+    
+\makeatletter
+\def\PY@reset{\let\PY@it=\relax \let\PY@bf=\relax%
+    \let\PY@ul=\relax \let\PY@tc=\relax%
+    \let\PY@bc=\relax \let\PY@ff=\relax}
+\def\PY@tok#1{\csname PY@tok@#1\endcsname}
+\def\PY@toks#1+{\ifx\relax#1\empty\else%
+    \PY@tok{#1}\expandafter\PY@toks\fi}
+\def\PY@do#1{\PY@bc{\PY@tc{\PY@ul{%
+    \PY@it{\PY@bf{\PY@ff{#1}}}}}}}
+\def\PY#1#2{\PY@reset\PY@toks#1+\relax+\PY@do{#2}}
+
+\expandafter\def\csname PY@tok@gd\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.63,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@gu\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.50,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@gt\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.27,0.87}{##1}}}
+\expandafter\def\csname PY@tok@gs\endcsname{\let\PY@bf=\textbf}
+\expandafter\def\csname PY@tok@gr\endcsname{\def\PY@tc##1{\textcolor[rgb]{1.00,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@cm\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@vg\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@m\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@mh\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@go\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.53,0.53,0.53}{##1}}}
+\expandafter\def\csname PY@tok@ge\endcsname{\let\PY@it=\textit}
+\expandafter\def\csname PY@tok@vc\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@il\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@cs\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@cp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.74,0.48,0.00}{##1}}}
+\expandafter\def\csname PY@tok@gi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.63,0.00}{##1}}}
+\expandafter\def\csname PY@tok@gh\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@ni\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.60,0.60,0.60}{##1}}}
+\expandafter\def\csname PY@tok@nl\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.63,0.63,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nn\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@no\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.53,0.00,0.00}{##1}}}
+\expandafter\def\csname PY@tok@na\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.49,0.56,0.16}{##1}}}
+\expandafter\def\csname PY@tok@nb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nc\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@nd\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.67,0.13,1.00}{##1}}}
+\expandafter\def\csname PY@tok@ne\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.82,0.25,0.23}{##1}}}
+\expandafter\def\csname PY@tok@nf\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,1.00}{##1}}}
+\expandafter\def\csname PY@tok@si\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.53}{##1}}}
+\expandafter\def\csname PY@tok@s2\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@vi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@nt\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@nv\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@s1\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@kd\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@sh\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sc\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sx\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@bp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@c1\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@kc\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@c\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.25,0.50,0.50}{##1}}}
+\expandafter\def\csname PY@tok@mf\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@err\endcsname{\def\PY@bc##1{\setlength{\fboxsep}{0pt}\fcolorbox[rgb]{1.00,0.00,0.00}{1,1,1}{\strut ##1}}}
+\expandafter\def\csname PY@tok@mb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@ss\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.10,0.09,0.49}{##1}}}
+\expandafter\def\csname PY@tok@sr\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.53}{##1}}}
+\expandafter\def\csname PY@tok@mo\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@kn\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@mi\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@gp\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.00,0.50}{##1}}}
+\expandafter\def\csname PY@tok@o\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.40,0.40,0.40}{##1}}}
+\expandafter\def\csname PY@tok@kr\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@s\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@kp\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@w\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.73,0.73}{##1}}}
+\expandafter\def\csname PY@tok@kt\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.69,0.00,0.25}{##1}}}
+\expandafter\def\csname PY@tok@ow\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.67,0.13,1.00}{##1}}}
+\expandafter\def\csname PY@tok@sb\endcsname{\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+\expandafter\def\csname PY@tok@k\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.00,0.50,0.00}{##1}}}
+\expandafter\def\csname PY@tok@se\endcsname{\let\PY@bf=\textbf\def\PY@tc##1{\textcolor[rgb]{0.73,0.40,0.13}{##1}}}
+\expandafter\def\csname PY@tok@sd\endcsname{\let\PY@it=\textit\def\PY@tc##1{\textcolor[rgb]{0.73,0.13,0.13}{##1}}}
+
+\def\PYZbs{\char`\\}
+\def\PYZus{\char`\_}
+\def\PYZob{\char`\{}
+\def\PYZcb{\char`\}}
+\def\PYZca{\char`\^}
+\def\PYZam{\char`\&}
+\def\PYZlt{\char`\<}
+\def\PYZgt{\char`\>}
+\def\PYZsh{\char`\#}
+\def\PYZpc{\char`\%}
+\def\PYZdl{\char`\$}
+\def\PYZhy{\char`\-}
+\def\PYZsq{\char`\'}
+\def\PYZdq{\char`\"}
+\def\PYZti{\char`\~}
+% for compatibility with earlier versions
+\def\PYZat{@}
+\def\PYZlb{[}
+\def\PYZrb{]}
+\makeatother
+
+
+    % Exact colors from NB
+    \definecolor{incolor}{rgb}{0.0, 0.0, 0.5}
+    \definecolor{outcolor}{rgb}{0.545, 0.0, 0.0}
+
+
+
+    
+    % Prevent overflowing lines due to hard-to-break entities
+    \sloppy 
+    % Setup hyperref package
+    \hypersetup{
+      breaklinks=true,  % so long urls are correctly broken across lines
+      colorlinks=true,
+      urlcolor=blue,
+      linkcolor=darkorange,
+      citecolor=darkgreen,
+      }
+    % Slightly bigger margins than the latex defaults
+    
+    \geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+    
+    
+
+    \begin{document}
+    
+    
+    
+    \maketitle
+    
+    
+    \tableofcontents
+
+
+    
+    \section{Problems in the Bicincitta data set from
+2013}\label{problems-in-the-bicincitta-data-set-from-2013}
+
+There are problems with the Bicincitta data that we need to address
+before loading the data into a reliable and proper data-base. We will
+point out these problems using examples, and measure their magnitude
+using systematic analysis, and then speculate about the cause behind
+these problems.
+
+    \subsection{Data}\label{data}
+
+We load the data from JSONs provided to us by Bicincitta at the end of
+April 2015.
+
+
+    The resulting data is in the form of lists of dictionaries.
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+a subnetwork is described by, 
+	id
+	name
+
+ a station is described by,
+	latitude
+	name
+	id
+	longitude
+	subnetwork\_id
+
+ a user is described by 
+	subnetwork\_id
+	gender
+	expires
+	postal\_code
+	address
+	id
+
+ a transaction is described by, 
+	direction
+	user\_id
+	event\_time
+	created\_at
+	updated\_at
+	station\_id
+	id
+    \end{Verbatim}
+
+    The resulting dictionaries have ids that are UTF-8 strings. We change
+these to integers to make our work easier. The addersses in the user
+data are web-quotes, which we need to \emph{unquote}. We will also
+unquote the station names, just to be safe. There are keys in a
+transaction that do not seem to correspond to the data, but refer to the
+time at which the data was loaded into the JSON provided to us.We will
+drop these variables, and change the \emph{event\_time} to a time
+object.
+
+
+
+    
+
+
+
+    \subsection{Who are the users?}\label{who-are-the-users}
+
+The simplest question may be the fraction of females vs males,
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+Of all the users  60  percent are female  and  39  percent males.
+    \end{Verbatim}
+
+    It would be interesting if 60\% of the users were in fact female.
+However, as we will see later there seems to be a problem of user
+duplicacy biased towards females. This bias towards is much worse among
+the users for whome an address is available. More than ninety percent of
+the users with an available address in the data are female.
+
+    \subsection{Subnetworks for stations users, and
+transactions}\label{subnetworks-for-stations-users-and-transactions}
+
+We have a data table for subnetworks, which contains the subnetwork's id
+and name. Both users and stations have been assigned a
+\emph{subnetwork\_id} which should be an integer pointing to the
+\emph{id} variable in the subnetwork table. We would expect all the
+subnetworks in this table to be conceptually equivalent. Thus the
+subnetworks \emph{PubliBike} and \emph{Campus} should refer to the same
+concept of a subnetwork. However a peek at the data hints against this
+assumption. \textbf{It seems that there are two distinct concepts of a
+subnetwork in the subnetwork table.} There are several lines of evidence
+leading us to this conclusion.
+
+First of all, only 11 of the 18 subnetworks have a station assigned to
+them, and 7 have no stations (see table in the appendix).
+
+
+
+    While none of the stations have been assigned the subnetwork, most of
+the users are in subnetwork PubliBike,
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+Number of users from subnetwork PubliBike is 58927
+    \end{Verbatim}
+
+    The subnetworks thus appear to mean two different things:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  a geographic subnetwork that has stations
+\item
+  an administrative subnetwork that is assigned to a user when she signs
+  up.
+\end{enumerate}
+
+
+
+
+
+
+
+    So we assign each transaction an administrative and a geographic
+subnetwork. The administrative subnetwork is the subnetwork that the
+user of the transaction has been assigned, and the geographic subnetwork
+is the subnetwork that the station of the transaction has been assigned.
+So administratively, all the transactions are in PubliBike, while
+geographically they are in 11 different subnetworks. In the appendix we
+present a table for subnetworks, showing the number of transactions that
+fall in a subnetwork, both administratively and geographically, along
+with the number of users.
+
+Looking at the actual number of users who have registered a transaction
+makes us question the validity of the user data base.
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+Fraction of users who have registered a transaction 0.10673152586
+    \end{Verbatim}
+
+    With only 10\% users with registered transactions, where are the
+remaining 90\% users from ? Are they left-overs from previous versions
+of the system? Or is there an error in the database? Additionally, all
+the users with the transactions have been assigned the subnetwork
+\emph{PubliBike}.
+
+
+
+
+        
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{bicincittaReport_files/bicincittaReport_31_1.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{bicincittaReport_files/bicincittaReport_31_2.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{bicincittaReport_files/bicincittaReport_31_3.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    \subsection{User addresses}\label{user-addresses}
+
+There are several problems associated with user addresses. We have
+already noticed, and fixed, that the provided addresses in the JSON have
+not been \emph{unquoted} from their web encoding. Here we continue to
+explore other problems that may arise in the addresses.
+
+We want to count the number of users at one address. Because the
+addresses have been provided as strings, we have to be able to aggregate
+all address strings that describe the same address. We have written a
+python function to do this task, which takes the address and postal-code
+strings to provide a combined string taking into account some empirical
+disambiguation criteria such as \emph{Av, Ave}, for \emph{Avenue}.
+
+Addresses are not available for all the users.
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+Number of users with available address 21659  of which only  15446  unique
+    \end{Verbatim}
+
+
+    What fraction of unique addresses have multiple users?
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+0.230545124951
+    \end{Verbatim}
+
+    How many users at addresses with multiple users?
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+9774
+    \end{Verbatim}
+
+    which corresponds to a fraction of all users with available address,
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+0.451267371531
+    \end{Verbatim}
+
+    Multiple users at the same address could be actual multiple people, or
+multiple registrations by the same person, or a database error. We can
+consider as an example the address with the most multiplicity of 53,
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+address:  via lambertenghi 1; 6900 , number of users:  53
+    \end{Verbatim}
+
+    We could say more about the multiple users at the same address if we
+look at their transactions. However as it turns out, we \textbf{do not
+have addresses for users who have registered transactions in the data}.
+
+
+
+
+%\begin{center}
+%    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{bicincittaReport_files/bicincittaReport_49_1.png}
+%    \end{center}
+%    { \hspace*{\fill} \\}
+%    
+%
+%        
+%    \begin{center}
+%    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{bicincittaReport_files/bicincittaReport_50_1.png}
+%    \end{center}
+%    { \hspace*{\fill} \\}
+    
+    \section{Appendix}\label{appendix}
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+Table characterizing subnetworks
+                     id  stations  trxns\_adm  trxns\_geo  users
+name                                                          
+La Cote               1        13          0      71292      0
+Bulle                 3         2          0        566      0
+Les Lacs-Romont       4         9          0       4964      0
+Bâle                  5         0          0          0      0
+Riviera              11         5          0      11576      0
+Morges               15         0          0          0      0
+Chablais              6        10          0       2377      3
+Ouchy                16         0          0          0      3
+Paradiso             17         0          0          0      3
+Vevey                14         0          0          0      4
+unknown            2011         0          0          0    152
+unknown            2005         0          0          0    469
+Valais Central        7         7          0       5077    530
+Cern                 18         0          0          0    721
+Yverdon-les-Bains     8         9          0      33227    773
+Agglo Fribourg        2        10          0      17630    810
+Lausanne-Morges       9        11          0      12157   2183
+Lugano-Paradiso      12        13          0      66415   3425
+Campus               10        15          0      65853  15871
+PubliBike            13         0     291134          0  58927
+    \end{Verbatim}
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+Table for addresses with multiple users
+                                             females  males  users
+address                                                           
+via lambertenghi 1; 6900                          52      1     53
+chemin des falaises 3; 1005                       52      0     52
+chemin des berges 12; 1022                        41      0     41
+avenue des bains 9; 1007                          37      0     37
+via monte carmen 4; 6900                          33      0     33
+route cantonale 33; 1025                          25      0     25
+via madonnetta 23; 6900                           24      0     24
+place du tunnel 17; 1005                          23      0     23
+avenue des bains 11; 1007                         23      0     23
+rue de genève 76; 1004                            22      0     22
+route cantonale 35; 1025                          22      0     22
+via zurigo 1; 6900                                20      1     21
+rue du valentin 27; 1004                          19      0     19
+route de chavannes 40; 1007                       19      0     19
+chemin de la prairie 60; 1007                     18      0     18
+etudiant unil en \&atilde;\&copy;change; 1015       16      0     16
+chemin des triaudes; 1024                         16      0     16
+route de chavannes; 1007                          15      0     15
+rue de la blancherie 17; 1022                     14      0     14
+via zurigo 3; 6900                                13      1     14
+route de chavannes 46; 1007                       13      0     13
+route cantonale 37; 1025                          13      0     13
+cern;                                             10      3     13
+route de chavannes 50; 1007                       13      0     13
+12 avenue de l'eglise anglaise; 1006              13      0     13
+11 avenue des bains; 1007                         12      0     12
+92 avenue du tir fédéral; 1024                    12      0     12
+33 route cantonale; 1025                          12      0     12
+avenue de rhodanie 64b; 1007                      12      0     12
+chemin de rionza 5; 1020                          12      0     12
+rue de lausanne 11; 1020                          12      0     12
+chemin des triaudes 5; 1024                       11      0     11
+via buffi 13; 6900                                11      0     11
+avenue de rhodanie 64a; 1007                      11      0     11
+avenue de l'eglise anglaise 10; 1006              11      0     11
+route de chavannes 44; 1007                       11      0     11
+18 chemin des triaudes; 1024                      11      0     11
+chemin de la prairie 62; 1007                     11      0     11
+via beltramina 10a; 6900                          11      0     11
+via fola 1; 6963                                  11      0     11
+chemin des triaudes 11; 1024                      11      0     11
+route de chavannes 42; 1007                       11      0     11
+12 avenue de l'église anglaise; 1006              11      0     11
+avenue de rhodanie 64; 1007                       10      0     10
+9 avenue des bains; 1007                          10      0     10
+etudiant unil;                                    10      0     10
+rue de geneve 76; 1004                            10      0     10
+station 18; 1015                                  10      0     10
+    \end{Verbatim}
+
+
+
+
+
+    % Add a bibliography block to the postdoc
+    
+    
+    
+    \end{document}
