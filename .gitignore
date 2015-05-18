@@ -74,8 +74,10 @@ docs/_build/
 target/
 
 
-#data: some data files can be large, only zips will be in the repo
+#data: we do not keep data in the repository
 *.csv
+*.json
+*.zip
 
 #tex: unnecessary files
 *.aux
